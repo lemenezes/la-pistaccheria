@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { ShoppingBag } from "lucide-react";
+import CartDrawer from "./CartDrawer";
+import { useCart } from "../context/CartContext";
+import { OPEN_CART_DRAWER_EVENT } from "../lib/whatsappOrder";
 
 type NavLink =
   | { label: string; to: string; hash?: never }
@@ -15,8 +19,10 @@ const navLinks: NavLink[] = [
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
+  const { count } = useCart();
   const navigate = useNavigate();
   const isHome =
     typeof window !== "undefined" && window.location.pathname === "/";
@@ -44,12 +50,21 @@ export default function Header() {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && menuOpen) closeMenu();
+      if (e.key === "Escape" && cartOpen) setCartOpen(false);
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [menuOpen]);
+  }, [cartOpen, menuOpen]);
+
+  useEffect(() => {
+    const handleOpenCart = () => setCartOpen(true);
+    window.addEventListener(OPEN_CART_DRAWER_EVENT, handleOpenCart);
+    return () =>
+      window.removeEventListener(OPEN_CART_DRAWER_EVENT, handleOpenCart);
+  }, []);
 
   function openMenu() {
+    setCartOpen(false);
     setMenuOpen(true);
     const y = window.scrollY;
     document.body.style.cssText = `overflow:hidden;position:fixed;top:-${y}px;width:100%`;
@@ -65,6 +80,11 @@ export default function Header() {
     window.scrollTo(0, -parseInt(top || "0"));
     setMenuOpen(false);
     hamburgerRef.current?.focus();
+  }
+
+  function openCart() {
+    setMenuOpen(false);
+    setCartOpen(true);
   }
 
   return (
@@ -113,8 +133,21 @@ export default function Header() {
               )
             )}
 
+            <button
+              type="button"
+              onClick={openCart}
+              aria-label={`Carrinho com ${count} ${count === 1 ? "item" : "itens"}`}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full border border-cream-deep bg-cream/95 text-charcoal transition-colors duration-200 hover:text-pistachio cursor-pointer">
+              <ShoppingBag size={17} strokeWidth={1.5} />
+              {count > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-pistachio text-cream text-[8px] font-normal flex items-center justify-center leading-none rounded-full">
+                  {count > 9 ? "9+" : count}
+                </span>
+              )}
+            </button>
+
             <a
-              href="https://wa.me/5511999999999"
+              href="https://wa.me/5531981196886"
               target="_blank"
               rel="noopener noreferrer"
               className="ml-1 px-5 py-2.5 bg-pistachio text-cream text-[11px] tracking-[0.15em] uppercase font-normal hover:bg-pistachio-mid transition-colors duration-200">
@@ -124,6 +157,19 @@ export default function Header() {
 
           {/* Mobile: cart + hamburger */}
           <div className="md:hidden flex items-center gap-4">
+            <button
+              type="button"
+              onClick={openCart}
+              aria-label={`Carrinho com ${count} ${count === 1 ? "item" : "itens"}`}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full border border-cream-deep bg-cream/95 text-charcoal transition-colors duration-300 cursor-pointer">
+              <ShoppingBag size={18} strokeWidth={1.5} />
+              {count > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-pistachio text-cream text-[8px] font-normal flex items-center justify-center leading-none rounded-full">
+                  {count > 9 ? "9+" : count}
+                </span>
+              )}
+            </button>
+
             <button
               ref={hamburgerRef}
               aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
@@ -159,6 +205,8 @@ export default function Header() {
           />
         )}
       </AnimatePresence>
+
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
 
       {/* Drawer mobile */}
       <AnimatePresence>
@@ -232,7 +280,7 @@ export default function Header() {
 
             <div className="px-6 mt-auto pb-10 pt-4">
               <a
-                href="https://wa.me/5511999999999"
+                href="https://wa.me/5531981196886"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full text-center py-4 bg-pistachio text-cream text-xs tracking-[0.15em] uppercase font-normal hover:bg-pistachio-mid transition-colors duration-200">

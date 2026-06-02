@@ -1,17 +1,16 @@
-import { motion } from 'framer-motion'
-import { MessageCircle } from 'lucide-react'
+import { motion } from "framer-motion";
+import { MessageCircle } from "lucide-react";
 
 export default function CTA() {
   const waMessage = encodeURIComponent(
-    'Olá! Gostaria de fazer uma encomenda especial na La Pistaccheria.'
-  )
+    "Olá! Gostaria de fazer uma encomenda especial na La Pistaccheria."
+  );
 
   return (
     <section
       id="cta"
       aria-labelledby="cta-title"
-      className="bg-pistachio py-20 md:py-32 overflow-hidden relative"
-    >
+      className="bg-pistachio py-20 md:py-32 overflow-hidden relative">
       {/* Textura de fundo */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div className="absolute -top-60 -right-60 w-[700px] h-[700px] rounded-full bg-pistachio-mid/25 blur-3xl" />
@@ -20,21 +19,19 @@ export default function CTA() {
           className="absolute inset-0 opacity-[0.025]"
           style={{
             backgroundImage:
-              'repeating-linear-gradient(135deg, #FAF7F2 0px, #FAF7F2 1px, transparent 1px, transparent 18px)',
+              "repeating-linear-gradient(135deg, #FAF7F2 0px, #FAF7F2 1px, transparent 1px, transparent 18px)"
           }}
         />
       </div>
 
       <div className="relative max-w-5xl mx-auto px-5 md:px-10">
         <div className="grid md:grid-cols-[1fr_260px] gap-12 md:gap-16 items-center">
-
           {/* Texto */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          >
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
             <p className="text-[10px] tracking-[0.35em] uppercase text-gold-light font-normal mb-6">
               Encomendas especiais
             </p>
@@ -42,11 +39,10 @@ export default function CTA() {
             <h2
               id="cta-title"
               className="text-[2.4rem] md:text-[3.2rem] lg:text-[3.8rem] font-light text-cream leading-[1.1] mb-8"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-            >
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
               Criamos para
               <br />
-              <em className="text-gold-light" style={{ fontStyle: 'italic' }}>
+              <em className="text-gold-light" style={{ fontStyle: "italic" }}>
                 ocasiões únicas
               </em>
             </h2>
@@ -58,11 +54,10 @@ export default function CTA() {
             </p>
 
             <a
-              href={`https://wa.me/5511999999999?text=${waMessage}`}
+              href={`https://wa.me/5531981196886?text=${waMessage}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-10 py-5 bg-cream text-pistachio text-[11px] tracking-[0.18em] uppercase font-normal hover:bg-cream-deep transition-colors duration-300"
-            >
+              className="inline-flex items-center gap-3 px-10 py-5 bg-cream text-pistachio text-[11px] tracking-[0.18em] uppercase font-normal hover:bg-cream-deep transition-colors duration-300">
               <MessageCircle size={17} strokeWidth={1.5} aria-hidden="true" />
               Falar pelo WhatsApp
             </a>
@@ -73,16 +68,18 @@ export default function CTA() {
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.25, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              delay: 0.25,
+              duration: 0.9,
+              ease: [0.22, 1, 0.36, 1]
+            }}
             className="flex justify-center md:justify-end"
-            aria-hidden="true"
-          >
+            aria-hidden="true">
             <div className="text-center select-none">
               <div className="w-8 h-px bg-gold/60 mx-auto mb-6" />
               <p
                 className="text-[5rem] font-light text-cream/[0.12] leading-none tracking-[-0.02em]"
-                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-              >
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                 LP
               </p>
               <div className="w-8 h-px bg-gold/60 mx-auto mt-6 mb-5" />
@@ -97,6 +94,5 @@ export default function CTA() {
         </div>
       </div>
     </section>
-  )
+  );
 }
-

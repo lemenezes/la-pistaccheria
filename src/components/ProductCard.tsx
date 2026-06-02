@@ -110,7 +110,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
           </span>
 
           <a
-            href={`https://wa.me/5511999999999?text=${waMessage}`}
+            href={`https://wa.me/5531981196886?text=${waMessage}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-[10px] tracking-[0.22em] uppercase font-normal text-pistachio hover:text-pistachio-mid border-b border-pistachio/45 hover:border-pistachio transition-all duration-200 pb-px"

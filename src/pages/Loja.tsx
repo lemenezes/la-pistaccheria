@@ -100,7 +100,7 @@ export default function Loja() {
             <span className="text-pistachio font-normal">48h de antecedência</span>
           </p>
           <a
-            href="https://wa.me/5511999999999"
+            href="https://wa.me/5531981196886"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[10px] tracking-[0.2em] uppercase font-light text-warm-gray hover:text-pistachio transition-colors duration-200 border-b border-warm-gray/40 hover:border-pistachio pb-px"
