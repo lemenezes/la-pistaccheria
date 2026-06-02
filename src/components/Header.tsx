@@ -137,8 +137,11 @@ export default function Header() {
               type="button"
               onClick={openCart}
               aria-label={`Carrinho com ${count} ${count === 1 ? "item" : "itens"}`}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full border border-cream-deep bg-cream/95 text-charcoal transition-colors duration-200 hover:text-pistachio cursor-pointer">
+              className="relative inline-flex items-center gap-2 pl-3 pr-3 h-10 rounded-full border border-cream-deep bg-cream/95 text-charcoal transition-colors duration-200 hover:text-pistachio cursor-pointer">
               <ShoppingBag size={17} strokeWidth={1.5} />
+              <span className="text-[10px] tracking-[0.12em] uppercase font-medium">
+                Carrinho
+              </span>
               {count > 0 && (
                 <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-pistachio text-cream text-[8px] font-normal flex items-center justify-center leading-none rounded-full">
                   {count > 9 ? "9+" : count}
