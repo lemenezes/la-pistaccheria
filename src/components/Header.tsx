@@ -1,10 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ShoppingBag } from 'lucide-react'
+import { useCart } from '../context/CartContext'
 
-const navLinks = [
-  { label: 'Coleção', href: '#colecao' },
-  { label: 'Sobre', href: '#sobre' },
-  { label: 'Contato', href: '#contato' },
+type NavLink = { label: string; to: string; hash?: never } | { label: string; hash: string; to?: never }
+
+const navLinks: NavLink[] = [
+  { label: 'Loja', to: '/loja' },
+  { label: 'Sobre', hash: 'sobre' },
+  { label: 'Contato', hash: 'cta' },
 ]
 
 export default function Header() {
@@ -12,6 +17,23 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const drawerRef = useRef<HTMLDivElement>(null)
   const hamburgerRef = useRef<HTMLButtonElement>(null)
+  const { count } = useCart()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const isHome = pathname === '/'
+  const isDark = isHome && !scrolled
+
+  function scrollToSection(hash: string) {
+    const el = document.getElementById(hash)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('/')
+      setTimeout(() => {
+        document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' })
+      }, 300)
+    }
+  }
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40)
@@ -49,75 +71,113 @@ export default function Header() {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
-          scrolled
-            ? 'bg-cream/95 backdrop-blur-sm border-b border-cream-deep'
-            : 'bg-transparent'
+          isDark
+            ? 'bg-transparent'
+            : 'bg-cream/95 backdrop-blur-sm border-b border-cream-deep'
         }`}
       >
         <div className="max-w-7xl mx-auto px-5 md:px-10 h-16 md:h-20 flex items-center justify-between">
+
           {/* Logo */}
-          <a
-            href="/"
+          <Link
+            to="/"
             aria-label="La Pistaccheria — Página inicial"
             className="flex flex-col leading-none group"
           >
             <span
-              className="font-serif text-[1.35rem] md:text-2xl font-light tracking-wide text-charcoal group-hover:text-pistachio transition-colors duration-300"
+              className={`font-serif text-[1.35rem] md:text-2xl font-light tracking-wide transition-colors duration-300 ${isDark ? 'text-cream group-hover:text-gold-light' : 'text-charcoal group-hover:text-pistachio'}`}
               style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
             >
               La Pistaccheria
             </span>
-            <span className="text-[9px] tracking-[0.28em] uppercase text-warm-gray mt-0.5 font-light">
+            <span className={`text-[9px] tracking-[0.28em] uppercase mt-0.5 font-light transition-colors duration-300 ${isDark ? 'text-cream/50' : 'text-warm-gray'}`}>
               confeitaria italiana
             </span>
-          </a>
+          </Link>
 
           {/* Desktop nav */}
           <nav aria-label="Navegação principal" className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-xs tracking-[0.12em] uppercase font-light text-warm-gray hover:text-charcoal transition-colors duration-200"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              link.hash ? (
+                <button
+                  key={link.label}
+                  onClick={() => scrollToSection(link.hash!)}
+                  className={`text-xs tracking-[0.12em] uppercase font-light transition-colors duration-200 cursor-pointer bg-transparent border-none ${isDark ? 'text-cream/70 hover:text-cream' : 'text-warm-gray hover:text-charcoal'}`}
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <Link
+                  key={link.to}
+                  to={link.to!}
+                  className={`text-xs tracking-[0.12em] uppercase font-light transition-colors duration-200 ${isDark ? 'text-cream/70 hover:text-cream' : 'text-warm-gray hover:text-charcoal'}`}
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
+
+            {/* Carrinho */}
+            <Link
+              to="/carrinho"
+              aria-label={`Carrinho — ${count} ${count === 1 ? 'item' : 'itens'}`}
+              className={`relative transition-colors duration-200 ${isDark ? 'text-cream/70 hover:text-cream' : 'text-warm-gray hover:text-charcoal'}`}
+            >
+              <ShoppingBag size={18} strokeWidth={1.5} />
+              <AnimatePresence>
+                {count > 0 && (
+                  <motion.span
+                    key={count}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                    className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gold text-cream text-[9px] font-normal flex items-center justify-center leading-none"
+                  >
+                    {count > 9 ? '9+' : count}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Link>
+
             <a
               href="https://wa.me/5511999999999"
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-2 px-5 py-2.5 bg-pistachio text-cream text-[11px] tracking-[0.15em] uppercase font-normal hover:bg-pistachio-mid transition-colors duration-200"
+              className="ml-1 px-5 py-2.5 bg-pistachio text-cream text-[11px] tracking-[0.15em] uppercase font-normal hover:bg-pistachio-mid transition-colors duration-200"
             >
               Encomendar
             </a>
           </nav>
 
-          {/* Mobile hamburger */}
-          <button
-            ref={hamburgerRef}
-            aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-drawer"
-            onClick={menuOpen ? closeMenu : openMenu}
-            className="md:hidden flex flex-col gap-[5px] p-2 -mr-2 cursor-pointer"
-          >
-            <span
-              className={`block h-[1.5px] w-5 bg-charcoal transition-all duration-300 origin-center ${
-                menuOpen ? 'rotate-45 translate-y-[6.5px]' : ''
-              }`}
-            />
-            <span
-              className={`block h-[1.5px] w-5 bg-charcoal transition-all duration-300 ${
-                menuOpen ? 'opacity-0 scale-x-0' : ''
-              }`}
-            />
-            <span
-              className={`block h-[1.5px] w-5 bg-charcoal transition-all duration-300 origin-center ${
-                menuOpen ? '-rotate-45 -translate-y-[6.5px]' : ''
-              }`}
-            />
-          </button>
+          {/* Mobile: cart + hamburger */}
+          <div className="md:hidden flex items-center gap-4">
+            <Link
+              to="/carrinho"
+              aria-label={`Carrinho — ${count} ${count === 1 ? 'item' : 'itens'}`}
+              className={`relative transition-colors duration-300 ${isDark ? 'text-cream/70' : 'text-warm-gray'}`}
+            >
+              <ShoppingBag size={18} strokeWidth={1.5} />
+              {count > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gold text-cream text-[9px] font-normal flex items-center justify-center leading-none">
+                  {count > 9 ? '9+' : count}
+                </span>
+              )}
+            </Link>
+
+            <button
+              ref={hamburgerRef}
+              aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-drawer"
+              onClick={menuOpen ? closeMenu : openMenu}
+              className="flex flex-col gap-[5px] p-2 -mr-2 cursor-pointer"
+            >
+              <span className={`block h-[1.5px] w-5 transition-all duration-300 origin-center ${isDark ? 'bg-cream' : 'bg-charcoal'} ${menuOpen ? 'rotate-45 translate-y-[6.5px]' : ''}`} />
+              <span className={`block h-[1.5px] w-5 transition-all duration-300 ${isDark ? 'bg-cream' : 'bg-charcoal'} ${menuOpen ? 'opacity-0 scale-x-0' : ''}`} />
+              <span className={`block h-[1.5px] w-5 transition-all duration-300 origin-center ${isDark ? 'bg-cream' : 'bg-charcoal'} ${menuOpen ? '-rotate-45 -translate-y-[6.5px]' : ''}`} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -136,7 +196,7 @@ export default function Header() {
         )}
       </AnimatePresence>
 
-      {/* Mobile drawer */}
+      {/* Drawer mobile */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -170,18 +230,41 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Drawer nav */}
+            {/* Nav links */}
             <nav className="flex flex-col px-6 py-6 gap-0">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={closeMenu}
-                  className="py-4 text-[15px] font-light text-charcoal border-b border-cream-deep/60 tracking-wide hover:text-pistachio transition-colors duration-200"
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navLinks.map((link) =>
+                link.hash ? (
+                  <button
+                    key={link.label}
+                    onClick={() => { scrollToSection(link.hash!); closeMenu() }}
+                    className="py-4 text-[15px] font-light text-charcoal border-b border-cream-deep/60 tracking-wide hover:text-pistachio transition-colors duration-200 text-left cursor-pointer bg-transparent border-x-0 border-t-0 w-full"
+                  >
+                    {link.label}
+                  </button>
+                ) : (
+                  <Link
+                    key={link.to}
+                    to={link.to!}
+                    onClick={closeMenu}
+                    className="py-4 text-[15px] font-light text-charcoal border-b border-cream-deep/60 tracking-wide hover:text-pistachio transition-colors duration-200"
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
+              <Link
+                to="/carrinho"
+                onClick={closeMenu}
+                className="py-4 text-[15px] font-light text-charcoal border-b border-cream-deep/60 tracking-wide hover:text-pistachio transition-colors duration-200 flex items-center gap-3"
+              >
+                <ShoppingBag size={15} strokeWidth={1.5} aria-hidden="true" />
+                Carrinho
+                {count > 0 && (
+                  <span className="ml-auto text-[10px] tracking-[0.15em] text-gold font-normal">
+                    {count} {count === 1 ? 'item' : 'itens'}
+                  </span>
+                )}
+              </Link>
             </nav>
 
             <div className="px-6 mt-auto pb-10 pt-4">

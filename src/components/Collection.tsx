@@ -71,7 +71,7 @@ export default function Collection() {
           </p>
           <a
             href="#contato"
-            className="text-[10px] tracking-[0.2em] uppercase font-light text-warm-gray hover:text-pistachio transition-colors duration-200 border-b border-warm-gray/30 hover:border-pistachio pb-px"
+            className="text-[10px] tracking-[0.2em] uppercase font-light text-warm-gray hover:text-pistachio transition-colors duration-200 border-b border-warm-gray/45 hover:border-pistachio pb-px"
           >
             Fazer uma encomenda
           </a>
