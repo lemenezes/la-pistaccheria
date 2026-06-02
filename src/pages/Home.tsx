@@ -63,7 +63,7 @@ function HomeProductCard({ product, index }: { product: Product; index: number }
             </span>
           )}
         </div>
-        <p className="text-[9px] tracking-[0.28em] uppercase text-warm-gray/60 font-light mb-1">
+        <p className="text-[9px] tracking-[0.28em] uppercase text-warm-gray font-normal mb-1">
           {product.category}
         </p>
         <h3
@@ -73,7 +73,7 @@ function HomeProductCard({ product, index }: { product: Product; index: number }
           {product.name}
         </h3>
         {product.weight && (
-          <p className="text-[11px] font-light text-warm-gray/60 mb-3">{product.weight}</p>
+          <p className="text-[11px] font-light text-warm-gray-light mb-3">{product.weight}</p>
         )}
         <div className="flex items-center justify-between">
           <span
@@ -82,7 +82,7 @@ function HomeProductCard({ product, index }: { product: Product; index: number }
           >
             {formatPrice(product.price)}
           </span>
-          <span className="text-[9px] tracking-[0.15em] uppercase text-warm-gray border-b border-warm-gray/30 pb-px group-hover:text-pistachio group-hover:border-pistachio transition-colors duration-200">
+          <span className="text-[9px] tracking-[0.15em] uppercase text-warm-gray border-b border-warm-gray/45 pb-px group-hover:text-pistachio group-hover:border-pistachio transition-colors duration-200">
             Ver produto
           </span>
         </div>
@@ -118,7 +118,7 @@ function LargeHomeProductCard({ product }: { product: Product }) {
             </span>
           )}
         </div>
-        <p className="text-[9px] tracking-[0.28em] uppercase text-warm-gray/60 font-light mb-1.5">
+        <p className="text-[9px] tracking-[0.28em] uppercase text-warm-gray font-normal mb-1.5">
           {product.category}
         </p>
         <h3
@@ -128,7 +128,7 @@ function LargeHomeProductCard({ product }: { product: Product }) {
           {product.name}
         </h3>
         {product.weight && (
-          <p className="text-[12px] font-light text-warm-gray/60 mb-3">{product.weight}</p>
+          <p className="text-[12px] font-light text-warm-gray-light mb-3">{product.weight}</p>
         )}
         <div className="flex items-center justify-between">
           <span
@@ -137,7 +137,7 @@ function LargeHomeProductCard({ product }: { product: Product }) {
           >
             {formatPrice(product.price)}
           </span>
-          <span className="text-[9px] tracking-[0.15em] uppercase text-warm-gray border-b border-warm-gray/30 pb-px group-hover:text-pistachio group-hover:border-pistachio transition-colors duration-200">
+          <span className="text-[9px] tracking-[0.15em] uppercase text-warm-gray border-b border-warm-gray/45 pb-px group-hover:text-pistachio group-hover:border-pistachio transition-colors duration-200">
             Ver produto
           </span>
         </div>
@@ -159,7 +159,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-5 md:px-10">
           <div className="flex items-end justify-between mb-12 md:mb-16">
             <motion.div {...fadeUp}>
-              <p className="text-[9px] tracking-[0.32em] uppercase text-gold font-light mb-2">
+              <p className="text-[9px] tracking-[0.32em] uppercase text-gold font-normal mb-2">
                 Destaques
               </p>
               <h2
@@ -178,7 +178,7 @@ export default function Home() {
             >
               <Link
                 to="/loja"
-                className="text-[10px] tracking-[0.18em] uppercase font-light text-warm-gray hover:text-charcoal border-b border-warm-gray/30 hover:border-charcoal/50 pb-px transition-colors duration-200"
+                className="text-[10px] tracking-[0.18em] uppercase font-normal text-warm-gray hover:text-charcoal border-b border-warm-gray/45 hover:border-charcoal/50 pb-px transition-colors duration-200"
               >
                 Ver todos
               </Link>
@@ -255,7 +255,7 @@ export default function Home() {
             >
               <div className="flex items-center gap-3 mb-7">
                 <div className="h-px w-5 bg-gold flex-shrink-0" aria-hidden="true" />
-                <p className="text-[9px] tracking-[0.32em] uppercase text-gold font-light">
+                <p className="text-[9px] tracking-[0.32em] uppercase text-gold font-normal">
                   Bronte · Sicília
                 </p>
               </div>
@@ -303,13 +303,13 @@ export default function Home() {
                 transition={{ delay: i * 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               >
                 <p
-                  className="text-[3.5rem] font-light text-pistachio/[0.15] leading-none mb-5 select-none"
+                  className="text-[3.5rem] font-light text-pistachio/[0.22] leading-none mb-5 select-none"
                   style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
                   aria-hidden="true"
                 >
                   {pillar.num}
                 </p>
-                <div className="h-px w-8 bg-gold/45 mb-5" aria-hidden="true" />
+                <div className="h-px w-8 bg-gold/60 mb-5" aria-hidden="true" />
                 <h3
                   className="text-[1.1rem] font-light text-charcoal mb-3"
                   style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
@@ -331,7 +331,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-5 md:px-10">
             <div className="flex items-end justify-between mb-12 md:mb-16">
               <motion.div {...fadeUp}>
-                <p className="text-[9px] tracking-[0.32em] uppercase text-gold font-light mb-2">
+                <p className="text-[9px] tracking-[0.32em] uppercase text-gold font-normal mb-2">
                   Coleção completa
                 </p>
                 <h2
@@ -350,7 +350,7 @@ export default function Home() {
               >
                 <Link
                   to="/loja"
-                  className="text-[10px] tracking-[0.18em] uppercase font-light text-warm-gray hover:text-charcoal border-b border-warm-gray/30 hover:border-charcoal/50 pb-px transition-colors duration-200"
+                  className="text-[10px] tracking-[0.18em] uppercase font-normal text-warm-gray hover:text-charcoal border-b border-warm-gray/45 hover:border-charcoal/50 pb-px transition-colors duration-200"
                 >
                   Ver loja
                 </Link>

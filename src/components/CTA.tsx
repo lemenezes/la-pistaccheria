@@ -35,7 +35,7 @@ export default function CTA() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="text-[10px] tracking-[0.35em] uppercase text-gold-light font-light mb-6">
+            <p className="text-[10px] tracking-[0.35em] uppercase text-gold-light font-normal mb-6">
               Encomendas especiais
             </p>
 
@@ -51,7 +51,7 @@ export default function CTA() {
               </em>
             </h2>
 
-            <p className="text-[15px] md:text-base font-light text-cream/65 leading-[1.8] mb-12 max-w-lg">
+            <p className="text-[15px] md:text-base font-light text-cream/82 leading-[1.8] mb-12 max-w-lg">
               Casamentos, aniversários, presentes corporativos e celebrações
               especiais. Cada encomenda é tratada com cuidado artesanal e
               embalagem exclusiva.
@@ -78,18 +78,18 @@ export default function CTA() {
             aria-hidden="true"
           >
             <div className="text-center select-none">
-              <div className="w-8 h-px bg-gold/45 mx-auto mb-6" />
+              <div className="w-8 h-px bg-gold/60 mx-auto mb-6" />
               <p
                 className="text-[5rem] font-light text-cream/[0.12] leading-none tracking-[-0.02em]"
                 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
               >
                 LP
               </p>
-              <div className="w-8 h-px bg-gold/45 mx-auto mt-6 mb-5" />
-              <p className="text-[8px] tracking-[0.4em] uppercase text-gold/70 font-light mb-1">
+              <div className="w-8 h-px bg-gold/60 mx-auto mt-6 mb-5" />
+              <p className="text-[8px] tracking-[0.4em] uppercase text-gold/85 font-normal mb-1">
                 La Pistaccheria
               </p>
-              <p className="text-[7px] tracking-[0.28em] uppercase text-cream/30 font-light">
+              <p className="text-[7px] tracking-[0.28em] uppercase text-cream/55 font-normal">
                 Confeitaria Italiana · Est. 2024
               </p>
             </div>

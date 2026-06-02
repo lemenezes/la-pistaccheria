@@ -85,12 +85,14 @@ export default function Header() {
             className="flex flex-col leading-none group"
           >
             <span
-              className={`font-serif text-[1.35rem] md:text-2xl font-light tracking-wide transition-colors duration-300 ${isDark ? 'text-cream group-hover:text-gold-light' : 'text-charcoal group-hover:text-pistachio'}`}
+              className={`font-serif text-[1.35rem] md:text-2xl font-light tracking-wide transition-colors duration-300 ${isDark ? 'text-charcoal/92 group-hover:text-pistachio' : 'text-charcoal group-hover:text-pistachio'}`}
               style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
             >
               La Pistaccheria
             </span>
-            <span className={`text-[9px] tracking-[0.28em] uppercase mt-0.5 font-light transition-colors duration-300 ${isDark ? 'text-cream/50' : 'text-warm-gray'}`}>
+            <span
+              className={`text-[9px] tracking-[0.28em] uppercase mt-0.5 font-normal transition-colors duration-300 ${isDark ? 'text-charcoal/70' : 'text-warm-gray'}`}
+            >
               confeitaria italiana
             </span>
           </Link>
@@ -102,7 +104,7 @@ export default function Header() {
                 <button
                   key={link.label}
                   onClick={() => scrollToSection(link.hash!)}
-                  className={`text-xs tracking-[0.12em] uppercase font-light transition-colors duration-200 cursor-pointer bg-transparent border-none ${isDark ? 'text-cream/70 hover:text-cream' : 'text-warm-gray hover:text-charcoal'}`}
+                  className={`text-xs tracking-[0.12em] uppercase font-normal transition-colors duration-200 cursor-pointer bg-transparent border-none ${isDark ? 'text-cream/82 hover:text-cream' : 'text-warm-gray hover:text-charcoal'}`}
                 >
                   {link.label}
                 </button>
@@ -110,7 +112,7 @@ export default function Header() {
                 <Link
                   key={link.to}
                   to={link.to!}
-                  className={`text-xs tracking-[0.12em] uppercase font-light transition-colors duration-200 ${isDark ? 'text-cream/70 hover:text-cream' : 'text-warm-gray hover:text-charcoal'}`}
+                  className={`text-xs tracking-[0.12em] uppercase font-normal transition-colors duration-200 ${isDark ? 'text-cream/82 hover:text-cream' : 'text-warm-gray hover:text-charcoal'}`}
                 >
                   {link.label}
                 </Link>
@@ -121,7 +123,7 @@ export default function Header() {
             <Link
               to="/carrinho"
               aria-label={`Carrinho — ${count} ${count === 1 ? 'item' : 'itens'}`}
-              className={`relative transition-colors duration-200 ${isDark ? 'text-cream/70 hover:text-cream' : 'text-warm-gray hover:text-charcoal'}`}
+              className={`relative transition-colors duration-200 ${isDark ? 'text-cream/82 hover:text-cream' : 'text-warm-gray hover:text-charcoal'}`}
             >
               <ShoppingBag size={18} strokeWidth={1.5} />
               <AnimatePresence>
@@ -155,7 +157,7 @@ export default function Header() {
             <Link
               to="/carrinho"
               aria-label={`Carrinho — ${count} ${count === 1 ? 'item' : 'itens'}`}
-              className={`relative transition-colors duration-300 ${isDark ? 'text-cream/70' : 'text-warm-gray'}`}
+              className={`relative transition-colors duration-300 ${isDark ? 'text-cream/82' : 'text-warm-gray'}`}
             >
               <ShoppingBag size={18} strokeWidth={1.5} />
               {count > 0 && (
