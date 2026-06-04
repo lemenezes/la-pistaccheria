@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="La Pistaccheria">
+  <rect width="64" height="64" rx="14" fill="#3f5d2c"/>
+  <circle cx="32" cy="32" r="21" fill="#f7f2ea" opacity="0.98"/>
+  <path d="M20 42V22h5v16h11v4H20zm25-20l-6.5 8 6.8 12h-5.7l-4.5-8.2-2.9 3.5V42h-5V22h5v7.7L40.2 22H45z" fill="#3f5d2c"/>
+</svg>
