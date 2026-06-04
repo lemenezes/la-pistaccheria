@@ -86,6 +86,14 @@ export const getProductBySlug = async (slug: string) => {
     .single();
 };
 
+export const getProductById = async (id: string) => {
+  return supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .single();
+};
+
 export const createProduct = async (
   product: Omit<DatabaseProduct, "id" | "created_at" | "updated_at" | "created_by">
 ) => {

@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getProducts } from "../../lib/supabase";
+import { getProducts, deleteProduct } from "../../lib/supabase";
 import { formatPrice } from "../../lib/formatPrice";
 import type { DatabaseProduct } from "../../types/database";
 
@@ -11,34 +11,28 @@ export default function AdminProdutos() {
   const [products, setProducts] = useState<DatabaseProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    let ignore = false;
+  const loadProducts = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-    async function loadProducts() {
-      setIsLoading(true);
-      setError(null);
+    const { data, error: queryError } = await getProducts();
 
-      const { data, error: queryError } = await getProducts();
-
-      if (ignore) return;
-
-      if (queryError) {
-        setError(queryError.message || "Falha ao carregar produtos.");
-        setProducts([]);
-      } else {
-        setProducts((data || []) as DatabaseProduct[]);
-      }
-
-      setIsLoading(false);
+    if (queryError) {
+      setError(queryError.message || "Falha ao carregar produtos.");
+      setProducts([]);
+    } else {
+      setProducts((data || []) as DatabaseProduct[]);
     }
 
-    loadProducts();
-
-    return () => {
-      ignore = true;
-    };
+    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   async function handleLogout() {
     try {
@@ -48,6 +42,22 @@ export default function AdminProdutos() {
       const message = err instanceof Error ? err.message : "Erro ao sair.";
       setError(message);
     }
+  }
+
+  async function handleDelete(id: string) {
+    setIsDeleting(true);
+    setError(null);
+
+    const { error: deleteError } = await deleteProduct(id);
+
+    if (deleteError) {
+      setError(deleteError.message || "Erro ao excluir produto.");
+    } else {
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    }
+
+    setConfirmDeleteId(null);
+    setIsDeleting(false);
   }
 
   return (
@@ -69,13 +79,22 @@ export default function AdminProdutos() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="self-start md:self-auto px-5 h-10 border border-cream-deep text-[10px] tracking-[0.16em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 transition-colors"
-          >
-            Sair
-          </button>
+          <div className="flex items-center gap-3 self-start md:self-auto">
+            <button
+              type="button"
+              onClick={() => navigate("/admin/produtos/novo")}
+              className="px-5 h-10 bg-charcoal text-cream text-[10px] tracking-[0.2em] uppercase hover:bg-charcoal/85 transition-colors"
+            >
+              Novo Produto
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-5 h-10 border border-cream-deep text-[10px] tracking-[0.16em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 transition-colors"
+            >
+              Sair
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -85,39 +104,105 @@ export default function AdminProdutos() {
         )}
 
         <div className="border border-cream-deep bg-cream overflow-hidden">
-          <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,0.6fr)] gap-4 px-4 py-3 border-b border-cream-deep text-[10px] tracking-[0.14em] uppercase text-warm-gray">
+          <div className="hidden md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,0.5fr)_minmax(0,1fr)] gap-4 px-4 py-3 border-b border-cream-deep text-[10px] tracking-[0.14em] uppercase text-warm-gray">
             <span>Produto</span>
             <span>Categoria</span>
             <span>Preço</span>
             <span>Status</span>
+            <span />
           </div>
 
           {isLoading ? (
-            <div className="px-4 py-8 text-sm text-warm-gray">Carregando produtos...</div>
+            <div className="px-4 py-8 text-sm text-warm-gray">
+              Carregando produtos…
+            </div>
           ) : products.length === 0 ? (
-            <div className="px-4 py-8 text-sm text-warm-gray">Nenhum produto encontrado.</div>
+            <div className="px-4 py-8 text-sm text-warm-gray">
+              Nenhum produto encontrado.{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/admin/produtos/novo")}
+                className="underline underline-offset-2 text-charcoal"
+              >
+                Criar o primeiro
+              </button>
+            </div>
           ) : (
             <ul>
               {products.map((product) => (
                 <li
                   key={product.id}
-                  className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,0.6fr)] gap-4 px-4 py-4 border-b border-cream-deep/70 last:border-b-0"
+                  className="flex flex-col md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,0.5fr)_minmax(0,1fr)] gap-2 md:gap-4 px-4 py-4 border-b border-cream-deep/70 last:border-b-0"
                 >
                   <div>
                     <p
                       className="text-[1.1rem] font-light text-charcoal leading-tight"
-                      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+                      style={{
+                        fontFamily: "'Cormorant Garamond', Georgia, serif",
+                      }}
                     >
                       {product.name}
                     </p>
-                    <p className="text-[11px] text-warm-gray mt-1">/{product.slug}</p>
+                    <p className="text-[11px] text-warm-gray mt-1">
+                      /{product.slug}
+                    </p>
                   </div>
 
-                  <p className="text-[12px] text-warm-gray self-center">{product.category}</p>
-                  <p className="text-[12px] text-charcoal self-center">{formatPrice(product.price)}</p>
-                  <p className="text-[12px] text-warm-gray self-center">
+                  <p className="text-[12px] text-warm-gray md:self-center">
+                    {product.category}
+                  </p>
+                  <p className="text-[12px] text-charcoal md:self-center">
+                    {formatPrice(product.price)}
+                  </p>
+                  <p className="text-[12px] text-warm-gray md:self-center">
                     {product.active ? "Ativo" : "Inativo"}
                   </p>
+
+                  {/* Ações */}
+                  <div className="flex items-center gap-2 md:justify-end mt-2 md:mt-0">
+                    {confirmDeleteId === product.id ? (
+                      <>
+                        <span className="text-[11px] text-[#8A3A3A] mr-1">
+                          Excluir?
+                        </span>
+                        <button
+                          type="button"
+                          disabled={isDeleting}
+                          onClick={() => handleDelete(product.id)}
+                          className="px-3 h-8 bg-[#8A3A3A] text-cream text-[10px] tracking-[0.12em] uppercase hover:bg-[#7a3030] disabled:opacity-50 transition-colors"
+                        >
+                          {isDeleting ? "…" : "Confirmar"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isDeleting}
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="px-3 h-8 border border-cream-deep text-[10px] tracking-[0.12em] uppercase text-warm-gray hover:text-charcoal transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(`/admin/produtos/${product.id}`)
+                          }
+                          className="px-3 h-8 border border-cream-deep text-[10px] tracking-[0.12em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 transition-colors"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(product.id)}
+                          className="px-3 h-8 border border-cream-deep text-[10px] tracking-[0.12em] uppercase text-warm-gray hover:text-[#8A3A3A] hover:border-[#E0C8C8] transition-colors"
+                        >
+                          Excluir
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
