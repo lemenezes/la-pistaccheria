@@ -155,9 +155,9 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         <button
                           type="button"
                           onClick={() => removeItem(item.product.id)}
-                          className="text-warm-gray-light hover:text-charcoal transition-colors p-1 cursor-pointer"
+                          className="text-[10px] tracking-[0.14em] uppercase font-light text-warm-gray-light hover:text-charcoal transition-colors pb-px border-b border-warm-gray-light/35 hover:border-charcoal/45 cursor-pointer"
                           aria-label={`Remover ${item.product.name}`}>
-                          <X size={14} strokeWidth={1.5} />
+                          Remover item
                         </button>
                       </div>
 

@@ -2,6 +2,8 @@ import type { CartItem } from "../context/CartContext";
 
 export const WHATSAPP_ORDER_NUMBER = "5531981196886";
 export const OPEN_CART_DRAWER_EVENT = "lp:open-cart";
+export const CART_DRAWER_STATE_EVENT = "lp:cart-drawer-state";
+export const FULLSCREEN_OVERLAY_STATE_EVENT = "lp:fullscreen-overlay-state";
 
 function formatEstimatedSubtotal(value: number): string {
   return new Intl.NumberFormat("pt-BR", {
@@ -43,4 +45,20 @@ export function buildWhatsAppOrderUrl(items: CartItem[]): string {
 
 export function openCartDrawer() {
   window.dispatchEvent(new CustomEvent(OPEN_CART_DRAWER_EVENT));
+}
+
+export function emitCartDrawerState(open: boolean) {
+  window.dispatchEvent(
+    new CustomEvent(CART_DRAWER_STATE_EVENT, {
+      detail: { open }
+    })
+  );
+}
+
+export function emitFullscreenOverlayState(open: boolean) {
+  window.dispatchEvent(
+    new CustomEvent(FULLSCREEN_OVERLAY_STATE_EVENT, {
+      detail: { open }
+    })
+  );
 }

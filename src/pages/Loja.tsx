@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, ShoppingBag } from "lucide-react";
 import StoreCard from "../components/StoreCard";
 import { useCart } from "../context/CartContext";
 import { products } from "../data/products";
-import { openCartDrawer } from "../lib/whatsappOrder";
+import {
+  FULLSCREEN_OVERLAY_STATE_EVENT,
+  openCartDrawer
+} from "../lib/whatsappOrder";
 
 const ALL = "Todos";
 const categories = [ALL, ...Array.from(new Set(products.map(p => p.category)))];
@@ -12,6 +15,11 @@ const categories = [ALL, ...Array.from(new Set(products.map(p => p.category)))];
 export default function Loja() {
   const [active, setActive] = useState(ALL);
   const [toastProductName, setToastProductName] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+  const [isFullscreenOverlayOpen, setIsFullscreenOverlayOpen] =
+    useState(false);
   const { count, total } = useCart();
 
   const filtered =
@@ -21,6 +29,32 @@ export default function Loja() {
     setToastProductName(productName);
     window.setTimeout(() => setToastProductName(null), 1700);
   }
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const handleMediaChange = () => setIsMobile(media.matches);
+
+    handleMediaChange();
+    media.addEventListener("change", handleMediaChange);
+
+    return () => media.removeEventListener("change", handleMediaChange);
+  }, []);
+
+  useEffect(() => {
+    const handleOverlayState = (event: Event) => {
+      const customEvent = event as CustomEvent<{ open?: boolean }>;
+      setIsFullscreenOverlayOpen(Boolean(customEvent.detail?.open));
+    };
+
+    window.addEventListener(FULLSCREEN_OVERLAY_STATE_EVENT, handleOverlayState);
+
+    return () => {
+      window.removeEventListener(
+        FULLSCREEN_OVERLAY_STATE_EVENT,
+        handleOverlayState
+      );
+    };
+  }, []);
 
   return (
     <>
@@ -148,7 +182,7 @@ export default function Loja() {
       )}
 
       {/* CTA fixo para carrinho */}
-      {count > 0 && (
+      {count > 0 && (!isMobile || !isFullscreenOverlayOpen) && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

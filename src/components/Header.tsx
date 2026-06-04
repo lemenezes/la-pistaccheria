@@ -4,7 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import CartDrawer from "./CartDrawer";
 import { useCart } from "../context/CartContext";
-import { OPEN_CART_DRAWER_EVENT } from "../lib/whatsappOrder";
+import {
+  OPEN_CART_DRAWER_EVENT,
+  emitCartDrawerState,
+  emitFullscreenOverlayState
+} from "../lib/whatsappOrder";
 
 type NavLink =
   | { label: string; to: string; hash?: never }
@@ -62,6 +66,14 @@ export default function Header() {
     return () =>
       window.removeEventListener(OPEN_CART_DRAWER_EVENT, handleOpenCart);
   }, []);
+
+  useEffect(() => {
+    emitCartDrawerState(cartOpen);
+  }, [cartOpen]);
+
+  useEffect(() => {
+    emitFullscreenOverlayState(menuOpen || cartOpen);
+  }, [menuOpen, cartOpen]);
 
   function openMenu() {
     setCartOpen(false);
