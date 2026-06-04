@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import CartDrawer from "./CartDrawer";
 import { useCart } from "../context/CartContext";
+import { formatPrice } from "../lib/formatPrice";
 import {
   OPEN_CART_DRAWER_EVENT,
   emitCartDrawerState,
@@ -26,11 +27,16 @@ export default function Header() {
   const [cartOpen, setCartOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
-  const { count } = useCart();
+  const { count, items, total } = useCart();
   const navigate = useNavigate();
   const isHome =
     typeof window !== "undefined" && window.location.pathname === "/";
   const isTransparentHomeHeader = isHome && !scrolled;
+  const distinctProducts = items.length;
+  const cartSummary =
+    distinctProducts > 0
+      ? `${distinctProducts} ${distinctProducts === 1 ? "produto" : "produtos"} • ${formatPrice(total)}`
+      : "Nenhum produto selecionado";
 
   function scrollToSection(hash: string) {
     const el = document.getElementById(hash);
@@ -95,6 +101,11 @@ export default function Header() {
   }
 
   function openCart() {
+    if (menuOpen) {
+      const top = document.body.style.top;
+      document.body.style.cssText = "";
+      window.scrollTo(0, -parseInt(top || "0"));
+    }
     setMenuOpen(false);
     setCartOpen(true);
   }
@@ -325,6 +336,17 @@ export default function Header() {
                   </Link>
                 )
               )}
+
+              <button
+                type="button"
+                onClick={openCart}
+                aria-label={`Abrir carrinho. ${cartSummary}`}
+                className="py-4 text-[15px] font-light text-charcoal border-b border-cream-deep/60 hover:text-pistachio transition-colors duration-200 text-left cursor-pointer bg-transparent border-x-0 border-t-0 w-full flex flex-col items-start gap-1">
+                <span>Carrinho</span>
+                <span className="text-[10px] tracking-[0.08em] uppercase text-warm-gray">
+                  {cartSummary}
+                </span>
+              </button>
             </nav>
 
             <div className="px-6 mt-auto pb-10 pt-4">
