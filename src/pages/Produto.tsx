@@ -13,6 +13,38 @@ import {
   fetchPublicProducts
 } from "../lib/publicProducts";
 
+function ProductSkeleton() {
+  return (
+    <>
+      <div className="max-w-7xl mx-auto px-5 md:px-10 pt-28 md:pt-36 mb-10">
+        <div className="h-3 w-40 bg-cream-deep animate-pulse" />
+      </div>
+
+      <section className="max-w-7xl mx-auto px-5 md:px-10 pb-20 grid md:grid-cols-2 gap-12 md:gap-20">
+        <div className="relative aspect-square overflow-hidden bg-cream-deep animate-pulse" />
+
+        <div className="flex flex-col justify-center">
+          <div className="h-3 w-28 bg-cream-deep animate-pulse mb-4" />
+          <div className="h-12 md:h-14 w-3/4 bg-cream-deep animate-pulse mb-5" />
+          <div className="h-10 w-32 bg-cream-deep animate-pulse mb-7" />
+
+          <div className="h-px bg-pistachio-border/40 mb-7" />
+
+          <div className="space-y-3 mb-8 max-w-md">
+            <div className="h-3 w-full bg-cream-deep animate-pulse" />
+            <div className="h-3 w-11/12 bg-cream-deep animate-pulse" />
+            <div className="h-3 w-4/5 bg-cream-deep animate-pulse" />
+          </div>
+
+          <div className="h-12 w-full sm:w-[360px] bg-cream-deep animate-pulse mb-6" />
+          <div className="h-12 w-full sm:w-[360px] bg-cream-deep animate-pulse mb-8" />
+          <div className="h-3 w-44 bg-cream-deep animate-pulse" />
+        </div>
+      </section>
+    </>
+  );
+}
+
 export default function Produto() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -77,15 +109,7 @@ export default function Produto() {
   }, [product, products]);
 
   if (isLoading && !product) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-5">
-        <p
-          className="text-3xl font-light text-charcoal"
-          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-          Carregando produto
-        </p>
-      </div>
-    );
+    return <ProductSkeleton />;
   }
 
   if (!product || loadError) {
