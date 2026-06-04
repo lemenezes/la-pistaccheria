@@ -15,6 +15,11 @@ export default function AdminProdutoNovo() {
     setIsSubmitting(true);
 
     try {
+      const galleryUrls = values.gallery_urls
+        .split("\n")
+        .map((url) => url.trim())
+        .filter((url) => url.length > 0);
+
       const { error: apiError } = await createProduct({
         name: values.name,
         slug: values.slug,
@@ -27,10 +32,10 @@ export default function AdminProdutoNovo() {
         featured: values.featured,
         weight: null,
         badge: null,
-        display_order: 0,
-        meta_title: null,
-        meta_description: null,
-        gallery_urls: [],
+        display_order: parseInt(values.display_order) || 0,
+        meta_title: values.meta_title || null,
+        meta_description: values.meta_description || null,
+        gallery_urls: galleryUrls,
       });
 
       if (apiError) {

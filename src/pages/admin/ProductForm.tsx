@@ -11,6 +11,10 @@ export type ProductFormValues = {
   image_url: string;
   active: boolean;
   featured: boolean;
+  display_order: string;
+  meta_title: string;
+  meta_description: string;
+  gallery_urls: string;
 };
 
 interface ProductFormProps {
@@ -59,6 +63,10 @@ export default function ProductForm({
     image_url: initialData?.image_url ?? "",
     active: initialData?.active ?? true,
     featured: initialData?.featured ?? false,
+    display_order: initialData?.display_order != null ? String(initialData.display_order) : "0",
+    meta_title: initialData?.meta_title ?? "",
+    meta_description: initialData?.meta_description ?? "",
+    gallery_urls: Array.isArray(initialData?.gallery_urls) ? initialData.gallery_urls.join("\n") : "",
   });
 
   const [slugTouched, setSlugTouched] = useState(!!initialData?.slug);
@@ -189,6 +197,18 @@ export default function ProductForm({
             placeholder="https://..."
             className={inputClass}
           />
+          {form.image_url && (
+            <div className="mt-3 border border-cream-deep bg-cream-light/30 p-3 max-w-[150px]">
+              <img
+                src={form.image_url}
+                alt="Preview"
+                className="w-full h-auto object-cover rounded"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Descrição curta */}
@@ -221,6 +241,84 @@ export default function ProductForm({
             rows={5}
             className={textareaClass}
           />
+        </div>
+
+        {/* Meta Title */}
+        <div className="md:col-span-2">
+          <label htmlFor="pf-meta_title" className={labelClass}>
+            Meta Title (SEO)
+          </label>
+          <input
+            id="pf-meta_title"
+            name="meta_title"
+            type="text"
+            value={form.meta_title}
+            onChange={handleChange}
+            autoComplete="off"
+            placeholder="Título para mecanismos de busca (opcional)"
+            className={inputClass}
+          />
+          <p className="text-[10px] text-warm-gray/60 mt-1">
+            Máximo 60 caracteres
+          </p>
+        </div>
+
+        {/* Meta Description */}
+        <div className="md:col-span-2">
+          <label htmlFor="pf-meta_description" className={labelClass}>
+            Meta Description (SEO)
+          </label>
+          <textarea
+            id="pf-meta_description"
+            name="meta_description"
+            value={form.meta_description}
+            onChange={handleChange}
+            rows={2}
+            placeholder="Descrição para mecanismos de busca (opcional)"
+            className={textareaClass}
+          />
+          <p className="text-[10px] text-warm-gray/60 mt-1">
+            Máximo 160 caracteres
+          </p>
+        </div>
+
+        {/* Display Order */}
+        <div>
+          <label htmlFor="pf-display_order" className={labelClass}>
+            Ordem de Exibição
+          </label>
+          <input
+            id="pf-display_order"
+            name="display_order"
+            type="number"
+            value={form.display_order}
+            onChange={handleChange}
+            min="0"
+            step="1"
+            className={inputClass}
+          />
+          <p className="text-[10px] text-warm-gray/60 mt-1">
+            Menor = primeiro na loja
+          </p>
+        </div>
+
+        {/* Gallery URLs */}
+        <div className="md:col-span-2">
+          <label htmlFor="pf-gallery_urls" className={labelClass}>
+            URLs da Galeria
+          </label>
+          <textarea
+            id="pf-gallery_urls"
+            name="gallery_urls"
+            value={form.gallery_urls}
+            onChange={handleChange}
+            rows={3}
+            placeholder="Uma URL por linha (opcional)"
+            className={textareaClass}
+          />
+          <p className="text-[10px] text-warm-gray/60 mt-1">
+            URLs públicas separadas por quebra de linha
+          </p>
         </div>
 
         {/* Checkboxes */}
