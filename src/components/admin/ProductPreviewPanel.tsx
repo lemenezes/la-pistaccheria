@@ -1,6 +1,17 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ProductForm, { type ProductFormValues } from "../../pages/admin/ProductForm";
 import type { DatabaseProduct } from "../../types/database";
+
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hrs = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return "há menos de 1 minuto";
+  if (mins < 60) return `há ${mins} minuto${mins > 1 ? "s" : ""}`;
+  if (hrs < 24) return `há ${hrs} hora${hrs > 1 ? "s" : ""}`;
+  return `há ${days} dia${days > 1 ? "s" : ""}`;
+}
 
 interface ProductPreviewPanelProps {
   mode: "preview" | "create" | "edit";
@@ -31,6 +42,10 @@ export default function ProductPreviewPanel({
   onCancel,
 }: ProductPreviewPanelProps) {
   const [activeTab, setActiveTab] = useState<EditorTab>("geral");
+  const updatedLabel = useMemo(
+    () => (mode === "edit" && product?.updated_at ? `Última alteração ${relativeTime(product.updated_at)}` : null),
+    [mode, product?.updated_at]
+  );
 
   function handleTabChange(tab: EditorTab) {
     setActiveTab(tab);
@@ -64,19 +79,22 @@ export default function ProductPreviewPanel({
   return (
     <div className="h-full flex flex-col">
       {/* Header fixo */}
-      <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-4 border-b border-[#E5E0D8] shrink-0">
+      <div className="flex items-start justify-between gap-3 px-6 pt-5 pb-4 border-b border-[#E5E0D8] shrink-0">
         <div className="min-w-0">
-          <p className="text-[10px] tracking-[0.12em] uppercase text-[#9A9189] mb-1">
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#9A9189] mb-1.5">
             {mode === "create" ? "Criar produto" : "Editar produto"}
           </p>
-          <h3 className="text-[1.05rem] font-semibold text-[#1C1C1A] leading-tight truncate">
+          <h3 className="text-[1.15rem] font-semibold text-[#1C1C1A] leading-tight truncate">
             {mode === "create" ? "Novo produto" : product?.name || "Editar produto"}
           </h3>
+          {updatedLabel && (
+            <p className="text-[11px] text-[#A09890] mt-1">{updatedLabel}</p>
+          )}
         </div>
         <button
           type="button"
           onClick={onCancel}
-          className="w-7 h-7 flex items-center justify-center text-[#9A9189] hover:text-[#1C1C1A] hover:bg-[#F0EDE8] rounded-full transition-colors shrink-0 text-[20px] leading-none"
+          className="w-7 h-7 flex items-center justify-center text-[#9A9189] hover:text-[#1C1C1A] hover:bg-[#F0EDE8] rounded-full transition-colors shrink-0 text-[20px] leading-none mt-0.5"
           aria-label="Fechar editor"
         >
           ×
@@ -84,7 +102,7 @@ export default function ProductPreviewPanel({
       </div>
 
       {/* Abas */}
-      <div className="flex items-center gap-0 px-5 border-b border-[#E5E0D8] shrink-0">
+      <div className="flex items-center gap-0 px-6 border-b border-[#E5E0D8] shrink-0">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -102,7 +120,7 @@ export default function ProductPreviewPanel({
       </div>
 
       {/* Corpo rolável */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
         {submitError && (
           <div className="mb-4 border border-[#E0C8C8] bg-[#FBF2F2] text-[#8A3A3A] px-3 py-2.5 text-[12px] rounded-[3px]">
             {submitError}
@@ -122,7 +140,7 @@ export default function ProductPreviewPanel({
       </div>
 
       {/* Footer fixo */}
-      <div className="flex items-center gap-3 px-5 py-4 border-t border-[#E5E0D8] bg-[#FAF7F2] shrink-0">
+      <div className="flex items-center gap-3 px-6 py-4 border-t border-[#E5E0D8] bg-[#FAF7F2] shrink-0">
         <button
           type="button"
           onClick={onCancel}

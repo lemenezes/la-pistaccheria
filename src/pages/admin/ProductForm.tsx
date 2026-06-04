@@ -29,13 +29,13 @@ interface ProductFormProps {
 }
 
 const inputClass =
-  "w-full h-11 px-3 border border-cream-deep bg-cream text-[13px] text-charcoal placeholder:text-warm-gray/40 outline-none focus:border-charcoal/40 transition-colors";
+  "w-full h-12 px-4 border border-[#DDD8D0] bg-white text-[13.5px] text-[#1C1C1A] placeholder:text-[#A09890] outline-none focus:border-[#4E6638] focus:ring-1 focus:ring-[#4E6638]/20 transition-colors rounded-[5px]";
 
 const labelClass =
-  "block text-[10px] tracking-[0.16em] uppercase text-warm-gray mb-2";
+  "block text-[11px] font-medium tracking-[0.08em] uppercase text-[#5F5751] mb-1.5";
 
 const textareaClass =
-  "w-full px-3 py-2.5 border border-cream-deep bg-cream text-[13px] text-charcoal placeholder:text-warm-gray/40 outline-none focus:border-charcoal/40 transition-colors resize-none leading-relaxed";
+  "w-full px-4 py-3 border border-[#DDD8D0] bg-white text-[13.5px] text-[#1C1C1A] placeholder:text-[#A09890] outline-none focus:border-[#4E6638] focus:ring-1 focus:ring-[#4E6638]/20 transition-colors resize-none leading-relaxed rounded-[5px]";
 
 function generateSlug(value: string) {
   return value
@@ -189,7 +189,7 @@ export default function ProductForm({
         {/* URL da imagem */}
         <div>
           <label htmlFor="pf-image_url" className={labelClass}>
-            URL da Imagem
+            Imagem principal
           </label>
           <input
             id="pf-image_url"
@@ -202,11 +202,11 @@ export default function ProductForm({
             className={inputClass}
           />
           {form.image_url && (
-            <div className="mt-3 border border-cream-deep bg-cream-light/30 p-3 max-w-[150px]">
+            <div className="mt-3 border border-[#E5E0D8] bg-[#F7F5F2] p-2 rounded-[5px] overflow-hidden" style={{ maxWidth: 160 }}>
               <img
                 src={form.image_url}
                 alt="Preview"
-                className="w-full h-auto object-cover rounded"
+                className="w-full h-auto object-cover rounded-[3px]"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}

@@ -16,8 +16,9 @@ export default function ProductListItem({
     <button
       type="button"
       onClick={onSelect}
-      className={`w-full text-left grid grid-cols-[2fr_1fr_1fr_1fr] gap-0 items-center px-6 py-3.5 border-b border-[#F0EDE8] transition-colors ${
-        isSelected ? "bg-[#EDF1E8]" : "hover:bg-[#F7F5F2]"
+      style={isSelected ? { borderLeft: "3px solid #4f6436" } : { borderLeft: "3px solid transparent" }}
+      className={`w-full text-left grid grid-cols-[2fr_1fr_1fr_1fr] gap-0 items-center px-6 py-3.5 border-b border-[#F0EDE8] transition-all ${
+        isSelected ? "bg-[#eef1ea]" : "hover:bg-[#F7F5F2]"
       }`}
     >
       {/* Produto */}

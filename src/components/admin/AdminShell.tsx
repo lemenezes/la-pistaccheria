@@ -19,7 +19,7 @@ export default function AdminShell({ sidebar, main, panel }: AdminShellProps) {
       <main className="flex-1 min-w-0 overflow-auto">{main}</main>
 
       <aside
-        className="w-[380px] shrink-0 h-screen sticky top-0 flex flex-col border-l border-[#E5E0D8] bg-[#FAF7F2]"
+        className="w-[460px] shrink-0 h-screen sticky top-0 flex flex-col border-l border-[#E5E0D8] bg-[#FAF7F2]"
       >
         {panel}
       </aside>
