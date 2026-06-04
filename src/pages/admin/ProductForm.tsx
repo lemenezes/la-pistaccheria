@@ -18,12 +18,14 @@ export type ProductFormValues = {
 };
 
 interface ProductFormProps {
+  id?: string;
   initialData?: Partial<DatabaseProduct>;
   onSubmit: (values: ProductFormValues) => Promise<void>;
   isSubmitting: boolean;
   submitLabel: string;
   onCancel: () => void;
   error?: string | null;
+  hideActions?: boolean;
 }
 
 const inputClass =
@@ -46,12 +48,14 @@ function generateSlug(value: string) {
 }
 
 export default function ProductForm({
+  id,
   initialData,
   onSubmit,
   isSubmitting,
   submitLabel,
   onCancel,
   error,
+  hideActions,
 }: ProductFormProps) {
   const [form, setForm] = useState<ProductFormValues>({
     name: initialData?.name ?? "",
@@ -105,7 +109,7 @@ export default function ProductForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form id={id} onSubmit={handleSubmit} noValidate>
       {error && (
         <div className="mb-6 border border-[#E0C8C8] bg-[#FBF2F2] text-[#8A3A3A] px-4 py-3 text-[13px]">
           {error}
@@ -352,23 +356,25 @@ export default function ProductForm({
       </div>
 
       {/* Ações */}
-      <div className="flex gap-3 mt-8 pt-6 border-t border-cream-deep">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-7 h-11 bg-charcoal text-cream text-[10px] tracking-[0.2em] uppercase hover:bg-charcoal/85 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isSubmitting ? "Salvando…" : submitLabel}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isSubmitting}
-          className="px-6 h-11 border border-cream-deep text-[10px] tracking-[0.2em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 disabled:opacity-50 transition-colors"
-        >
-          Cancelar
-        </button>
-      </div>
+      {!hideActions && (
+        <div className="flex gap-3 mt-8 pt-6 border-t border-cream-deep">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-7 h-11 bg-charcoal text-cream text-[10px] tracking-[0.2em] uppercase hover:bg-charcoal/85 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSubmitting ? "Salvando…" : submitLabel}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="px-6 h-11 border border-cream-deep text-[10px] tracking-[0.2em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 disabled:opacity-50 transition-colors"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
     </form>
   );
 }

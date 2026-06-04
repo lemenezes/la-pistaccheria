@@ -13,10 +13,10 @@ export default function AdminLogin() {
 
   const redirectTo =
     (location.state as { from?: { pathname?: string } } | null)?.from
-      ?.pathname || "/admin/produtos";
+      ?.pathname || "/admin";
 
   if (user) {
-    return <Navigate to="/admin/produtos" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {

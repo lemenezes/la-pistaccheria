@@ -10,6 +10,7 @@ const Loja = lazy(() => import("./pages/Loja"));
 const Produto = lazy(() => import("./pages/Produto"));
 const Sobre = lazy(() => import("./pages/Sobre"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminWorkspace = lazy(() => import("./pages/admin/AdminWorkspace"));
 const AdminProdutos = lazy(() => import("./pages/admin/AdminProdutos"));
 const AdminProdutoNovo = lazy(() => import("./pages/admin/AdminProdutoNovo"));
 const AdminProdutoEditar = lazy(() => import("./pages/admin/AdminProdutoEditar"));
@@ -80,6 +81,14 @@ export default function App() {
                 </Suspense>
               }
             >
+              <Route
+                path="/admin"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <AdminWorkspace />
+                  </Suspense>
+                }
+              />
               <Route path="/admin/produtos" element={<AdminProdutos />} />
               <Route path="/admin/produtos/novo" element={<AdminProdutoNovo />} />
               <Route path="/admin/produtos/:id" element={<AdminProdutoEditar />} />
