@@ -4,17 +4,17 @@ import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Home from "./pages/Home";
-import Loja from "./pages/Loja";
-import Produto from "./pages/Produto";
-import Sobre from "./pages/Sobre";
 
+const Home = lazy(() => import("./pages/Home"));
+const Loja = lazy(() => import("./pages/Loja"));
+const Produto = lazy(() => import("./pages/Produto"));
+const Sobre = lazy(() => import("./pages/Sobre"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminProdutos = lazy(() => import("./pages/admin/AdminProdutos"));
 const AdminProdutoNovo = lazy(() => import("./pages/admin/AdminProdutoNovo"));
 const AdminProdutoEditar = lazy(() => import("./pages/admin/AdminProdutoEditar"));
 
-function AdminFallback() {
+function PageFallback() {
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center">
       <p className="text-[12px] tracking-[0.2em] uppercase text-warm-gray font-light">
@@ -31,23 +31,51 @@ export default function App() {
         <CartProvider>
           <Routes>
             <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/sobre" element={<Sobre />} />
-              <Route path="/loja" element={<Loja />} />
-              <Route path="/produto/:slug" element={<Produto />} />
+              <Route
+                path="/"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <Home />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/sobre"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <Sobre />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/loja"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <Loja />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/produto/:slug"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <Produto />
+                  </Suspense>
+                }
+              />
             </Route>
 
             <Route
               path="/admin/login"
               element={
-                <Suspense fallback={<AdminFallback />}>
+                <Suspense fallback={<PageFallback />}>
                   <AdminLogin />
                 </Suspense>
               }
             />
             <Route
               element={
-                <Suspense fallback={<AdminFallback />}>
+                <Suspense fallback={<PageFallback />}>
                   <ProtectedRoute />
                 </Suspense>
               }
