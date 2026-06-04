@@ -100,6 +100,12 @@ export default function Header() {
     hamburgerRef.current?.focus();
   }
 
+  function handleLogoClick() {
+    if (isHome) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
   function openCart() {
     if (menuOpen) {
       const top = document.body.style.top;
@@ -122,6 +128,7 @@ export default function Header() {
           {/* Logo */}
           <Link
             to="/"
+            onClick={handleLogoClick}
             aria-label="La Pistaccheria — Página inicial"
             className="flex flex-col leading-none group">
             <span
