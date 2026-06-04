@@ -300,6 +300,12 @@ export default function Home() {
                 className="self-start text-[10px] tracking-[0.22em] uppercase font-light text-charcoal border-b border-charcoal/30 hover:border-pistachio hover:text-pistachio pb-px transition-colors duration-200">
                 Descobrir a coleção
               </Link>
+
+              <Link
+                to="/sobre"
+                className="self-start mt-4 text-[10px] tracking-[0.2em] uppercase font-light text-warm-gray border-b border-warm-gray/40 hover:border-pistachio hover:text-pistachio pb-px transition-colors duration-200">
+                Conheça nossa história
+              </Link>
             </motion.div>
           </div>
         </div>

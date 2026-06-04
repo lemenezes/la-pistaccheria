@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Loja from "./pages/Loja";
 import Produto from "./pages/Produto";
+import Sobre from "./pages/Sobre";
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/sobre" element={<Sobre />} />
             <Route path="/loja" element={<Loja />} />
             <Route path="/produto/:slug" element={<Produto />} />
           </Route>
