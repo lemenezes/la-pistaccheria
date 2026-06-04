@@ -1,10 +1,12 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import Hero from "../components/Hero";
 import CTA from "../components/CTA";
-import { products } from "../data/products";
+import { products as fallbackProducts } from "../data/products";
 import { formatPrice } from "../lib/formatPrice";
 import type { Product } from "../data/products";
+import { fetchPublicProducts } from "../lib/publicProducts";
 
 const fadeUp = {
   initial: { opacity: 0, y: 18 },
@@ -158,6 +160,25 @@ function LargeHomeProductCard({ product }: { product: Product }) {
 }
 
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadProducts() {
+      const data = await fetchPublicProducts();
+      if (!ignore) {
+        setProducts(data);
+      }
+    }
+
+    loadProducts();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   const featured = curatedFavoriteSlugs
     .map(slug => products.find(product => product.slug === slug))
     .filter((product): product is Product => Boolean(product));

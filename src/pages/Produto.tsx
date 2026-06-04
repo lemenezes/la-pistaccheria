@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag, ArrowLeft } from "lucide-react";
-import { products } from "../data/products";
+import { products as fallbackProducts } from "../data/products";
+import type { Product } from "../data/products";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../lib/formatPrice";
 import { openCartDrawer } from "../lib/whatsappOrder";
 import StoreCard from "../components/StoreCard";
+import {
+  fetchPublicProductBySlug,
+  fetchPublicProducts
+} from "../lib/publicProducts";
 
 export default function Produto() {
   const { slug } = useParams<{ slug: string }>();
@@ -14,8 +19,68 @@ export default function Produto() {
   const { addItem } = useCart();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const product = products.find(p => p.slug === slug);
+  useEffect(() => {
+    if (!slug) {
+      setProduct(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const currentSlug = slug;
+
+    let ignore = false;
+
+    async function loadProductData() {
+      setIsLoading(true);
+
+      const fallbackProduct =
+        fallbackProducts.find(candidate => candidate.slug === currentSlug) ?? null;
+      if (!ignore && fallbackProduct) {
+        setProduct(fallbackProduct);
+      }
+
+      const [loadedProduct, loadedProducts] = await Promise.all([
+        fetchPublicProductBySlug(currentSlug),
+        fetchPublicProducts()
+      ]);
+
+      if (!ignore) {
+        setProduct(loadedProduct);
+        setProducts(loadedProducts);
+        setIsLoading(false);
+      }
+    }
+
+    loadProductData();
+
+    return () => {
+      ignore = true;
+    };
+  }, [slug]);
+
+  const related = useMemo(() => {
+    if (!product) return [];
+
+    return products
+      .filter(p => p.category === product.category && p.id !== product.id)
+      .slice(0, 3);
+  }, [product, products]);
+
+  if (isLoading && !product) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-5">
+        <p
+          className="text-3xl font-light text-charcoal"
+          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+          Carregando produto
+        </p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -33,10 +98,6 @@ export default function Produto() {
       </div>
     );
   }
-
-  const related = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 3);
 
   function handleAdd() {
     if (!product) return;

@@ -3,7 +3,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, ShoppingBag } from "lucide-react";
 import StoreCard from "../components/StoreCard";
 import { useCart } from "../context/CartContext";
-import { products } from "../data/products";
+import { products as fallbackProducts } from "../data/products";
+import type { Product } from "../data/products";
+import { fetchPublicProducts } from "../lib/publicProducts";
 import {
   FULLSCREEN_OVERLAY_STATE_EVENT,
   openCartDrawer
@@ -18,16 +20,8 @@ const visibleProductSlugs = new Set([
   "tartufo-di-pistacchio"
 ]);
 
-const visibleProducts = products.filter(product =>
-  visibleProductSlugs.has(product.slug)
-);
-
-const categories = [
-  ALL,
-  ...Array.from(new Set(visibleProducts.map(product => product.category)))
-];
-
 export default function Loja() {
+  const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [active, setActive] = useState(ALL);
   const [toastProductName, setToastProductName] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(() =>
@@ -38,6 +32,15 @@ export default function Loja() {
   const [isFooterInView, setIsFooterInView] = useState(false);
   const { count, total } = useCart();
 
+  const visibleProducts = products.filter(product =>
+    visibleProductSlugs.has(product.slug)
+  );
+
+  const categories = [
+    ALL,
+    ...Array.from(new Set(visibleProducts.map(product => product.category)))
+  ];
+
   const filtered =
     active === ALL
       ? visibleProducts
@@ -47,6 +50,23 @@ export default function Loja() {
     setToastProductName(productName);
     window.setTimeout(() => setToastProductName(null), 1700);
   }
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadProducts() {
+      const data = await fetchPublicProducts();
+      if (!ignore) {
+        setProducts(data);
+      }
+    }
+
+    loadProducts();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");

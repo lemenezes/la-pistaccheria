@@ -86,6 +86,24 @@ export const getProductBySlug = async (slug: string) => {
     .single();
 };
 
+export const getPublicProducts = async () => {
+  return supabase
+    .from("products")
+    .select("*")
+    .eq("active", true)
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: false });
+};
+
+export const getPublicProductBySlug = async (slug: string) => {
+  return supabase
+    .from("products")
+    .select("*")
+    .eq("active", true)
+    .eq("slug", slug)
+    .single();
+};
+
 export const getProductById = async (id: string) => {
   return supabase
     .from("products")
