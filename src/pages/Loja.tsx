@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, ShoppingBag } from "lucide-react";
 import StoreCard from "../components/StoreCard";
 import { useCart } from "../context/CartContext";
@@ -10,7 +10,22 @@ import {
 } from "../lib/whatsappOrder";
 
 const ALL = "Todos";
-const categories = [ALL, ...Array.from(new Set(products.map(p => p.category)))];
+const visibleProductSlugs = new Set([
+  "pasta-di-pistacchio",
+  "cremino-al-pistacchio",
+  "torta-pistacchio-e-limone",
+  "cannolo-al-pistacchio",
+  "tartufo-di-pistacchio"
+]);
+
+const visibleProducts = products.filter(product =>
+  visibleProductSlugs.has(product.slug)
+);
+
+const categories = [
+  ALL,
+  ...Array.from(new Set(visibleProducts.map(product => product.category)))
+];
 
 export default function Loja() {
   const [active, setActive] = useState(ALL);
@@ -20,10 +35,13 @@ export default function Loja() {
   );
   const [isFullscreenOverlayOpen, setIsFullscreenOverlayOpen] =
     useState(false);
+  const [isFooterInView, setIsFooterInView] = useState(false);
   const { count, total } = useCart();
 
   const filtered =
-    active === ALL ? products : products.filter(p => p.category === active);
+    active === ALL
+      ? visibleProducts
+      : visibleProducts.filter(product => product.category === active);
 
   function handleProductAdded(productName: string) {
     setToastProductName(productName);
@@ -54,6 +72,27 @@ export default function Loja() {
         handleOverlayState
       );
     };
+  }, []);
+
+  useEffect(() => {
+    const footer = document.querySelector<HTMLElement>(
+      'footer[role="contentinfo"]'
+    );
+
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsFooterInView(entry.isIntersecting);
+      },
+      {
+        threshold: 0.05
+      }
+    );
+
+    observer.observe(footer);
+
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -182,29 +221,33 @@ export default function Loja() {
       )}
 
       {/* CTA fixo para carrinho */}
-      {count > 0 && (!isMobile || !isFullscreenOverlayOpen) && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[125] w-[calc(100%-2rem)] max-w-md">
-          <button
-            type="button"
-            onClick={openCartDrawer}
-            className="w-full flex items-center justify-between gap-3 bg-pistachio text-cream px-5 py-4 shadow-[0_14px_35px_rgba(58,77,44,0.35)] border border-pistachio-mid hover:bg-pistachio-mid transition-colors duration-200 cursor-pointer"
-            aria-label={`Ver carrinho com ${count} ${count === 1 ? "item" : "itens"}`}>
-            <span className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] uppercase font-medium">
-              <ShoppingBag size={15} strokeWidth={1.7} aria-hidden="true" />
-              Ver carrinho
-            </span>
-            <span
-              className="text-[1.12rem] font-light"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-              {count} {count === 1 ? "item" : "itens"} • R${" "}
-              {total.toFixed(2).replace(".", ",")}
-            </span>
-          </button>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {count > 0 && (!isMobile || !isFullscreenOverlayOpen) && !isFooterInView && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[125] w-[calc(100%-2rem)] max-w-md">
+            <button
+              type="button"
+              onClick={openCartDrawer}
+              className="w-full flex items-center justify-between gap-3 bg-pistachio text-cream px-5 py-4 shadow-[0_14px_35px_rgba(58,77,44,0.35)] border border-pistachio-mid hover:bg-pistachio-mid transition-colors duration-200 cursor-pointer"
+              aria-label={`Ver carrinho com ${count} ${count === 1 ? "item" : "itens"}`}>
+              <span className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] uppercase font-medium">
+                <ShoppingBag size={15} strokeWidth={1.7} aria-hidden="true" />
+                Ver carrinho
+              </span>
+              <span
+                className="text-[1.12rem] font-light"
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                {count} {count === 1 ? "item" : "itens"} • R${" "}
+                {total.toFixed(2).replace(".", ",")}
+              </span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

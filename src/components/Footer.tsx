@@ -1,22 +1,14 @@
 import { Link } from 'react-router-dom'
 
-const footerNav = [
+type FooterLink = { label: string; to: string } | { label: string; href: string }
+
+const footerNav: { title: string; links: FooterLink[] }[] = [
   {
-    title: 'Coleção',
+    title: 'Explorar',
     links: [
-      { label: 'Pasta Artesanal', to: '/loja' },
-      { label: 'Bomboneria', to: '/loja' },
-      { label: 'Confeitaria', to: '/loja' },
-      { label: 'Doces Sicilianos', to: '/loja' },
-    ],
-  },
-  {
-    title: 'La Pistaccheria',
-    links: [
-      { label: 'Nossa história', to: '/' },
-      { label: 'Ingredientes', to: '/' },
-      { label: 'Encomendas especiais', to: '/' },
-      { label: 'Contato', to: '/' },
+      { label: 'Produtos', to: '/loja' },
+      { label: 'Nossa história', to: '/sobre' },
+      { label: 'Contato', href: '/#cta' },
     ],
   },
 ]
@@ -25,38 +17,38 @@ export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="bg-charcoal pt-16 pb-10 md:pt-20 md:pb-12" role="contentinfo">
+    <footer className="bg-charcoal pt-10 pb-6 md:pt-12 md:pb-7" role="contentinfo">
       <div className="max-w-7xl mx-auto px-5 md:px-10">
 
         {/* Grade principal */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-12 md:gap-20 mb-14 md:mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] gap-8 md:gap-10 mb-8 md:mb-10 items-start">
 
           {/* Marca */}
           <div>
             <Link to="/" aria-label="La Pistaccheria — Página inicial" className="inline-block">
               <p
-                className="text-[1.4rem] font-light tracking-wide text-cream/85 mb-1 hover:text-cream transition-colors duration-200"
+                className="text-[1.4rem] font-light tracking-wide text-cream hover:text-cream transition-colors duration-200"
                 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
               >
                 La Pistaccheria
               </p>
             </Link>
-            <p className="text-[9px] tracking-[0.28em] uppercase text-warm-gray font-light mb-6">
+            <p className="text-[9px] tracking-[0.28em] uppercase text-warm-gray-light/85 font-light mb-3">
               Confeitaria italiana · Bronte, Sicília
             </p>
-            <p className="text-[13px] font-light text-warm-gray/60 leading-[1.8] max-w-[240px]">
-              Confeitaria artesanal com pistache DOP de Bronte, criada com amor e
-              respeito às tradições sicilianas.
+            <p className="text-[13px] font-light text-warm-gray-light/88 leading-[1.75] max-w-[260px] md:whitespace-nowrap">
+              Confeitaria artesanal inspirada na tradição italiana, com
+              ingredientes selecionados e produção sob encomenda.
             </p>
 
             {/* Social */}
-            <div className="flex items-center gap-4 mt-6">
+            <div className="flex items-center gap-4 mt-4">
               <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram da La Pistaccheria"
-                className="text-warm-gray hover:text-cream/60 transition-colors duration-200"
+                className="text-warm-gray-light/86 hover:text-cream transition-colors duration-200"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -80,7 +72,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp da La Pistaccheria"
-                className="text-warm-gray hover:text-cream/60 transition-colors duration-200"
+                className="text-warm-gray-light/86 hover:text-cream transition-colors duration-200"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -103,18 +95,27 @@ export default function Footer() {
           {/* Colunas de navegação */}
           {footerNav.map((col) => (
             <div key={col.title}>
-              <p className="text-[9px] tracking-[0.28em] uppercase text-warm-gray font-light mb-5">
+              <p className="text-[9px] tracking-[0.28em] uppercase text-warm-gray-light/90 font-light mb-3">
                 {col.title}
               </p>
-              <ul className="space-y-3.5">
+              <ul className="space-y-2.5">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      to={link.to}
-                      className="text-[13px] font-light text-warm-gray/60 hover:text-cream/70 transition-colors duration-200"
-                    >
-                      {link.label}
-                    </Link>
+                    {'to' in link ? (
+                      <Link
+                        to={link.to}
+                        className="text-[13px] font-light text-warm-gray-light/88 hover:text-cream transition-colors duration-200"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-[13px] font-light text-warm-gray-light/88 hover:text-cream transition-colors duration-200"
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -123,13 +124,21 @@ export default function Footer() {
         </div>
 
         {/* Divider + copyright */}
-        <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-[11px] text-warm-gray/50 font-light">
-            © {year} La Pistaccheria. Todos os direitos reservados.
+        <div className="border-t border-white/[0.06] pt-4 flex flex-col md:flex-row items-center justify-between gap-1.5">
+          <p className="text-[11px] text-warm-gray-light/82 font-light">
+            © {year} La Pistaccheria.
           </p>
-          <p className="text-[11px] text-warm-gray/35 font-light">
-            Feito com cuidado artesanal · São Paulo, Brasil
-          </p>
+        </div>
+
+        <div className="pt-2 flex justify-center md:justify-end">
+          <a
+            href="https://leandrom.com.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] tracking-[0.08em] text-warm-gray-light/86 font-light hover:text-warm-gray-light/95 transition-colors duration-200"
+          >
+            Site desenvolvido por Leandro M.
+          </a>
         </div>
       </div>
     </footer>

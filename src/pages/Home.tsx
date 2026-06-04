@@ -6,12 +6,6 @@ import { products } from "../data/products";
 import { formatPrice } from "../lib/formatPrice";
 import type { Product } from "../data/products";
 
-const ORIGIN_IMG =
-  "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=900&h=1100&q=88&auto=format&fit=crop";
-
-const ORIGIN_BG =
-  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1800&h=900&q=75&auto=format&fit=crop";
-
 const fadeUp = {
   initial: { opacity: 0, y: 18 },
   whileInView: { opacity: 1, y: 0 },
@@ -38,6 +32,12 @@ const pillars = [
     title: "Por encomenda",
     text: "Preparamos sob medida para cada pedido, garantindo frescor e qualidade máxima sem compromisso."
   }
+];
+
+const curatedFavoriteSlugs = [
+  "cremino-al-pistacchio",
+  "pasta-di-pistacchio",
+  "torta-pistacchio-e-limone"
 ];
 
 // ── Card padrão (pequeno)
@@ -158,8 +158,14 @@ function LargeHomeProductCard({ product }: { product: Product }) {
 }
 
 export default function Home() {
-  const featured = products.filter(p => p.featured);
+  const featured = curatedFavoriteSlugs
+    .map(slug => products.find(product => product.slug === slug))
+    .filter((product): product is Product => Boolean(product));
   const rest = products.filter(p => !p.featured);
+  const signatureProduct =
+    products.find(product => product.slug === "torta-pistacchio-e-limone") ??
+    featured[0] ??
+    products[0];
 
   return (
     <>
@@ -235,16 +241,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SEÇÃO 3: ORIGEM ────────────────────────────────────────── */}
+      {/* ── SEÇÃO 3: ASSINATURA DA CASA ─────────────────────────────── */}
       <section
         id="sobre"
         className="relative overflow-hidden"
-        aria-label="Nossa origem">
-        {/* Fundo texturizado: pistaches reais */}
-        <div className="absolute inset-0" aria-hidden="true">
-          <img src={ORIGIN_BG} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-cream/88" />
-        </div>
+        aria-label="Assinatura da casa">
+        <div
+          className="absolute inset-0"
+          aria-hidden="true"
+          style={{
+            background:
+              "radial-gradient(circle at top right, rgba(214,226,204,0.72), transparent 34%), linear-gradient(180deg, #f7f2ea 0%, #f2ebe0 100%)"
+          }}
+        />
 
         <div className="relative max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2">
@@ -255,12 +264,32 @@ export default function Home() {
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
               className="relative overflow-hidden min-h-[70vw] lg:min-h-[560px]">
-              <img
-                src={ORIGIN_IMG}
-                alt="Cannolo al pistacchio artesanal"
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
+              {signatureProduct.image && (
+                <>
+                  <img
+                    src={signatureProduct.image}
+                    alt={signatureProduct.name}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ filter: "sepia(0.04) saturate(0.92) brightness(1.01)" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-charcoal/38 via-charcoal/8 to-transparent" />
+                </>
+              )}
+
+              <div className="absolute left-5 bottom-5 md:left-7 md:bottom-7 bg-cream/90 backdrop-blur-sm px-4 py-3 max-w-[16rem]">
+                <p className="text-[8px] tracking-[0.26em] uppercase text-gold font-normal mb-1">
+                  Assinatura da casa
+                </p>
+                <p
+                  className="text-[1.1rem] font-light text-charcoal leading-[1.1]"
+                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                  {signatureProduct.name}
+                </p>
+                <p className="text-[11px] font-light text-warm-gray mt-1">
+                  {formatPrice(signatureProduct.price)}
+                </p>
+              </div>
             </motion.div>
 
             {/* Texto */}
@@ -273,39 +302,42 @@ export default function Home() {
                   aria-hidden="true"
                 />
                 <p className="text-[9px] tracking-[0.32em] uppercase text-gold font-normal">
-                  Bronte · Sicília
+                  Pistache de Bronte DOP
                 </p>
               </div>
 
               <h2
                 className="text-[2.2rem] md:text-[2.8rem] lg:text-[3.2rem] font-light text-charcoal leading-[1.1] mb-6"
                 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                Do Etna
+                Doces feitos para
                 <br />
-                <em className="italic text-pistachio">para sua mesa</em>
+                <em className="italic text-pistachio">despertar desejo</em>
               </h2>
 
-              <p className="text-[13px] font-light text-warm-gray leading-[1.95] mb-5 max-w-sm">
-                O Pistache di Bronte DOP cresce nas encostas do vulcão Etna, em
-                solo vulcânico único no mundo. Colhido à mão a cada dois anos,
-                tem sabor intenso e cor esmeralda inigualáveis.
+              <p className="text-[13px] font-light text-warm-gray leading-[1.95] mb-5 max-w-md">
+                Bombons, tortas, cannoli e criações autorais preparados por
+                encomenda, com acabamento delicado, textura precisa e sabor
+                intenso de pistache.
               </p>
-              <p className="text-[13px] font-light text-warm-gray leading-[1.95] mb-10 max-w-sm">
-                Cada receita da La Pistaccheria começa por esse ingrediente
-                excepcional — sem atalhos, sem substitutos.
+              <p className="text-[13px] font-light text-warm-gray leading-[1.95] mb-10 max-w-md">
+                A origem em Bronte segue como assinatura de qualidade: um
+                argumento de valor que sustenta cada receita sem tirar o foco do
+                que importa, o prazer de provar.
               </p>
 
-              <Link
-                to="/loja"
-                className="self-start text-[10px] tracking-[0.22em] uppercase font-light text-charcoal border-b border-charcoal/30 hover:border-pistachio hover:text-pistachio pb-px transition-colors duration-200">
-                Descobrir a coleção
-              </Link>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+                <Link
+                  to="/loja"
+                  className="inline-flex items-center justify-center px-8 py-4 bg-pistachio text-cream text-[11px] tracking-[0.18em] uppercase font-normal hover:bg-pistachio-mid transition-colors duration-300 self-start">
+                  Ver produtos
+                </Link>
 
-              <Link
-                to="/sobre"
-                className="self-start mt-4 text-[10px] tracking-[0.2em] uppercase font-light text-warm-gray border-b border-warm-gray/40 hover:border-pistachio hover:text-pistachio pb-px transition-colors duration-200">
-                Conheça nossa história
-              </Link>
+                <Link
+                  to="/sobre"
+                  className="self-start text-[10px] tracking-[0.2em] uppercase font-light text-warm-gray border-b border-warm-gray/40 hover:border-pistachio hover:text-pistachio pb-px transition-colors duration-200">
+                  Conheça nossa história
+                </Link>
+              </div>
             </motion.div>
           </div>
         </div>
