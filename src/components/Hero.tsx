@@ -94,6 +94,11 @@ export default function Hero() {
             fetchPriority="high"
           />
 
+          <div
+            className="absolute top-0 left-0 right-0 h-[150px] md:hidden bg-gradient-to-b from-charcoal/24 via-charcoal/8 to-transparent pointer-events-none"
+            aria-hidden="true"
+          />
+
           {/* Badge de origem */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}

@@ -102,11 +102,20 @@ export default function Header() {
             aria-label="La Pistaccheria — Página inicial"
             className="flex flex-col leading-none group">
             <span
-              className="font-serif text-[1.35rem] md:text-2xl font-light tracking-wide text-charcoal transition-colors duration-300 group-hover:text-pistachio"
+              className={`font-serif text-[1.35rem] md:text-2xl font-light tracking-wide transition-colors duration-300 group-hover:text-pistachio ${
+                isTransparentHomeHeader
+                    ? "text-cream md:text-charcoal drop-shadow-[0_2px_12px_rgba(20,18,14,0.5)] md:drop-shadow-none"
+                  : "text-charcoal"
+              }`}
               style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
               La Pistaccheria
             </span>
-            <span className="text-[9px] tracking-[0.28em] uppercase mt-0.5 font-normal text-warm-gray transition-colors duration-300">
+            <span
+              className={`text-[9px] tracking-[0.28em] uppercase mt-0.5 font-normal transition-colors duration-300 ${
+                isTransparentHomeHeader
+                    ? "text-cream/92 md:text-warm-gray drop-shadow-[0_1px_10px_rgba(20,18,14,0.46)] md:drop-shadow-none"
+                  : "text-warm-gray"
+              }`}>
               confeitaria italiana
             </span>
           </Link>
@@ -164,7 +173,11 @@ export default function Header() {
               type="button"
               onClick={openCart}
               aria-label={`Carrinho com ${count} ${count === 1 ? "item" : "itens"}`}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full border border-cream-deep bg-cream/95 text-charcoal transition-colors duration-300 cursor-pointer">
+              className={`relative flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-300 cursor-pointer ${
+                isTransparentHomeHeader
+                    ? "border border-cream/72 bg-cream/18 backdrop-blur-[2px] text-cream shadow-[0_6px_18px_rgba(20,18,14,0.28)]"
+                  : "border border-cream-deep bg-cream/95 text-charcoal"
+              }`}>
               <ShoppingBag size={18} strokeWidth={1.5} />
               {count > 0 && (
                 <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-pistachio text-cream text-[8px] font-normal flex items-center justify-center leading-none rounded-full">
@@ -181,13 +194,34 @@ export default function Header() {
               onClick={menuOpen ? closeMenu : openMenu}
               className="flex flex-col gap-[5px] p-2 -mr-2 cursor-pointer">
               <span
-                className={`block h-[1.5px] w-5 transition-all duration-300 origin-center bg-charcoal ${menuOpen ? "rotate-45 translate-y-[6.5px]" : ""}`}
+                className={`block h-[1.5px] w-5 transition-all duration-300 origin-center ${
+                  isTransparentHomeHeader ? "bg-cream" : "bg-charcoal"
+                } ${menuOpen ? "rotate-45 translate-y-[6.5px]" : ""}`}
+                style={
+                  isTransparentHomeHeader
+                      ? { filter: "drop-shadow(0 1px 7px rgba(20,18,14,0.48))" }
+                    : undefined
+                }
               />
               <span
-                className={`block h-[1.5px] w-5 transition-all duration-300 bg-charcoal ${menuOpen ? "opacity-0 scale-x-0" : ""}`}
+                className={`block h-[1.5px] w-5 transition-all duration-300 ${
+                  isTransparentHomeHeader ? "bg-cream" : "bg-charcoal"
+                } ${menuOpen ? "opacity-0 scale-x-0" : ""}`}
+                style={
+                  isTransparentHomeHeader
+                      ? { filter: "drop-shadow(0 1px 7px rgba(20,18,14,0.48))" }
+                    : undefined
+                }
               />
               <span
-                className={`block h-[1.5px] w-5 transition-all duration-300 origin-center bg-charcoal ${menuOpen ? "-rotate-45 -translate-y-[6.5px]" : ""}`}
+                className={`block h-[1.5px] w-5 transition-all duration-300 origin-center ${
+                  isTransparentHomeHeader ? "bg-cream" : "bg-charcoal"
+                } ${menuOpen ? "-rotate-45 -translate-y-[6.5px]" : ""}`}
+                style={
+                  isTransparentHomeHeader
+                      ? { filter: "drop-shadow(0 1px 7px rgba(20,18,14,0.48))" }
+                    : undefined
+                }
               />
             </button>
           </div>
