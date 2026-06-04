@@ -160,7 +160,7 @@ function LargeHomeProductCard({ product }: { product: Product }) {
 }
 
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [products, setProducts] = useState<Product[] | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -179,14 +179,47 @@ export default function Home() {
     };
   }, []);
 
+  const resolvedProducts = products ?? fallbackProducts;
   const featured = curatedFavoriteSlugs
-    .map(slug => products.find(product => product.slug === slug))
+    .map(slug => resolvedProducts.find(product => product.slug === slug))
     .filter((product): product is Product => Boolean(product));
-  const rest = products.filter(p => !p.featured);
   const signatureProduct =
-    products.find(product => product.slug === "torta-pistacchio-e-limone") ??
+    resolvedProducts.find(product => product.slug === "torta-pistacchio-e-limone") ??
     featured[0] ??
-    products[0];
+    resolvedProducts[0];
+  const rest = resolvedProducts.filter(p => !p.featured);
+
+  if (products === null) {
+    return (
+      <>
+        <Hero />
+        <section className="bg-cream py-20 md:py-28" aria-labelledby="destaques-heading">
+          <div className="max-w-6xl mx-auto px-5 md:px-10">
+            <div className="flex items-end justify-between mb-12 md:mb-16">
+              <div>
+                <p className="text-[9px] tracking-[0.32em] uppercase text-gold font-normal mb-2">
+                  Destaques
+                </p>
+                <h2
+                  id="destaques-heading"
+                  className="text-[2rem] md:text-[2.5rem] font-light text-charcoal leading-[1.1]"
+                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                  Nossos favoritos
+                </h2>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 md:gap-10">
+              <div className="lg:col-span-2 aspect-[4/5] lg:aspect-[3/2] bg-cream-deep animate-pulse" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-7 md:gap-10">
+                <div className="aspect-[4/5] bg-cream-deep animate-pulse" />
+                <div className="aspect-[4/5] bg-cream-deep animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>

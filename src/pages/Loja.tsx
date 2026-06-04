@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, ShoppingBag } from "lucide-react";
 import StoreCard from "../components/StoreCard";
 import { useCart } from "../context/CartContext";
-import { products as fallbackProducts } from "../data/products";
 import type { Product } from "../data/products";
 import { fetchPublicProducts } from "../lib/publicProducts";
 import {
@@ -12,16 +11,20 @@ import {
 } from "../lib/whatsappOrder";
 
 const ALL = "Todos";
-const visibleProductSlugs = new Set([
-  "pasta-di-pistacchio",
-  "cremino-al-pistacchio",
-  "torta-pistacchio-e-limone",
-  "cannolo-al-pistacchio",
-  "tartufo-di-pistacchio"
-]);
+
+const CATEGORY_ORDER = [
+  "Linha Pistache Premium",
+  "Bomboneria",
+  "Pasta Artesanal",
+  "Confeitaria",
+  "Doces Sicilianos",
+  "Sobremesas",
+  "Tortas",
+  "Presentes e Caixas",
+];
 
 export default function Loja() {
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [products, setProducts] = useState<Product[] | null>(null);
   const [active, setActive] = useState(ALL);
   const [toastProductName, setToastProductName] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(() =>
@@ -32,19 +35,19 @@ export default function Loja() {
   const [isFooterInView, setIsFooterInView] = useState(false);
   const { count, total } = useCart();
 
-  const visibleProducts = products.filter(product =>
-    visibleProductSlugs.has(product.slug)
-  );
-
+  const activeCategories = new Set((products ?? []).map(p => p.category));
   const categories = [
     ALL,
-    ...Array.from(new Set(visibleProducts.map(product => product.category)))
+    ...CATEGORY_ORDER.filter(cat => activeCategories.has(cat)),
+    // categorias que existem nos produtos mas não estão na ordem manual
+    ...Array.from(activeCategories).filter(cat => !CATEGORY_ORDER.includes(cat)),
   ];
 
-  const filtered =
+  const filtered = (
     active === ALL
-      ? visibleProducts
-      : visibleProducts.filter(product => product.category === active);
+      ? (products ?? [])
+      : (products ?? []).filter(product => product.category === active)
+  ).slice().sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
   function handleProductAdded(productName: string) {
     setToastProductName(productName);
@@ -172,26 +175,40 @@ export default function Loja() {
       <section
         aria-label="Produtos"
         className="max-w-6xl mx-auto px-5 md:px-10 py-12 md:py-16 bg-cream">
-        <motion.div
-          key={active}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
-          {filtered.map((product, i) => (
-            <StoreCard
-              key={product.id}
-              product={product}
-              index={i}
-              onAdded={handleProductAdded}
-            />
-          ))}
-        </motion.div>
-
-        {filtered.length === 0 && (
-          <p className="text-center text-warm-gray font-light py-16">
-            Nenhum produto nesta categoria.
-          </p>
+        {products === null ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-4">
+                <div className="aspect-[4/5] bg-cream-deep animate-pulse" />
+                <div className="h-3 w-1/3 bg-cream-deep animate-pulse" />
+                <div className="h-5 w-2/3 bg-cream-deep animate-pulse" />
+                <div className="h-4 w-1/4 bg-cream-deep animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            <motion.div
+              key={active}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+              {filtered.map((product, i) => (
+                <StoreCard
+                  key={product.id}
+                  product={product}
+                  index={i}
+                  onAdded={handleProductAdded}
+                />
+              ))}
+            </motion.div>
+            {filtered.length === 0 && (
+              <p className="text-center text-warm-gray font-light py-16">
+                Nenhum produto nesta categoria.
+              </p>
+            )}
+          </>
         )}
       </section>
 
