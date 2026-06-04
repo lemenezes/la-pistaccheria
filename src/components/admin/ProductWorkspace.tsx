@@ -9,6 +9,7 @@ import AdminSidebar from "./AdminSidebar";
 import ProductList from "./ProductList";
 import ProductListToolbar, { type ProductFilter } from "./ProductListToolbar";
 import ProductPreviewPanel from "./ProductPreviewPanel";
+import ProductEditModal from "./ProductEditModal";
 
 export default function ProductWorkspace() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function ProductWorkspace() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ProductFilter>("all");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [editorMode, setEditorMode] = useState<"preview" | "create" | "edit">("preview");
+  const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -113,7 +114,7 @@ export default function ProductWorkspace() {
     try {
       const payload = mapFormValues(values);
 
-      if (editorMode === "create") {
+      if (modalMode === "create") {
         const { data, error: apiError } = await createProduct({
           ...payload,
           weight: null,
@@ -128,7 +129,7 @@ export default function ProductWorkspace() {
         const created = data as DatabaseProduct;
         setProducts((prev) => [created, ...prev]);
         setSelectedProductId(created.id);
-        setEditorMode("edit");
+        setModalMode(null);
         return;
       }
 
@@ -149,7 +150,7 @@ export default function ProductWorkspace() {
         prev.map((product) => (product.id === updated.id ? updated : product))
       );
       setSelectedProductId(updated.id);
-      setEditorMode("edit");
+      setModalMode(null);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Erro inesperado.");
     } finally {
@@ -160,22 +161,22 @@ export default function ProductWorkspace() {
   function handleOpenCreate() {
     setSubmitError(null);
     setSelectedProductId(null);
-    setEditorMode("create");
+    setModalMode("create");
   }
 
   function handleSelectProduct(id: string) {
     setSubmitError(null);
     setSelectedProductId(id);
-    setEditorMode("edit");
   }
 
-  function handleCancelEditor() {
+  function handleOpenEdit() {
     setSubmitError(null);
-    if (selectedProductId) {
-      setEditorMode("edit");
-      return;
-    }
-    setEditorMode("preview");
+    setModalMode("edit");
+  }
+
+  function handleCloseModal() {
+    setSubmitError(null);
+    setModalMode(null);
   }
 
   async function handleLogout() {
@@ -191,42 +192,50 @@ export default function ProductWorkspace() {
   }
 
   return (
-    <AdminShell
-      sidebar={
-        <AdminSidebar
-          userEmail={user?.email}
-          isLoggingOut={isLoggingOut}
-          onLogout={handleLogout}
-        />
-      }
-      main={
-        <div className="h-full flex flex-col">
-          <ProductListToolbar
-            query={query}
-            filter={filter}
-            onQueryChange={setQuery}
-            onFilterChange={setFilter}
-            onNewProduct={handleOpenCreate}
+    <>
+      <AdminShell
+        sidebar={
+          <AdminSidebar
+            userEmail={user?.email}
+            isLoggingOut={isLoggingOut}
+            onLogout={handleLogout}
           />
-          <ProductList
-            products={filteredProducts}
-            selectedProductId={selectedProductId}
-            isLoading={isLoading}
-            error={error}
-            onSelectProduct={handleSelectProduct}
+        }
+        main={
+          <div className="h-full flex flex-col">
+            <ProductListToolbar
+              query={query}
+              filter={filter}
+              onQueryChange={setQuery}
+              onFilterChange={setFilter}
+              onNewProduct={handleOpenCreate}
+            />
+            <ProductList
+              products={filteredProducts}
+              selectedProductId={selectedProductId}
+              isLoading={isLoading}
+              error={error}
+              onSelectProduct={handleSelectProduct}
+            />
+          </div>
+        }
+        panel={
+          <ProductPreviewPanel
+            product={selectedProduct}
+            onEdit={handleOpenEdit}
           />
-        </div>
-      }
-      panel={
-        <ProductPreviewPanel
-          mode={editorMode}
+        }
+      />
+      {modalMode !== null && (
+        <ProductEditModal
+          mode={modalMode}
           product={selectedProduct}
           isSubmitting={isSubmitting}
           submitError={submitError}
           onSubmit={handleSubmit}
-          onCancel={handleCancelEditor}
+          onClose={handleCloseModal}
         />
-      }
-    />
+      )}
+    </>
   );
 }
