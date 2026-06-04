@@ -19,11 +19,14 @@ export interface DatabaseProduct {
   badge: Badge;
   featured: boolean;
   active: boolean;
+  display_order: number;
+  meta_title: string | null;
+  meta_description: string | null;
   image_url: string | null;
-  image_storage_path: string | null;
+  gallery_urls: string[];
   created_at: string;
   updated_at: string;
-  created_by: string;
+  created_by: string | null;
 }
 
 export interface CreateProductInput {
@@ -37,17 +40,15 @@ export interface CreateProductInput {
   badge?: Badge;
   featured?: boolean;
   active?: boolean;
+  display_order?: number;
+  meta_title?: string;
+  meta_description?: string;
+  image_url?: string;
+  gallery_urls?: string[];
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {
   id: string;
-}
-
-export interface DatabaseUser {
-  id: string;
-  full_name: string | null;
-  role: "admin" | "editor";
-  created_at: string;
 }
 
 export interface AuthUser {

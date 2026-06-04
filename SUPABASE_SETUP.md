@@ -1,237 +1,60 @@
-# 🗃️ Supabase Setup - La Pistaccheria CMS
+# Supabase Setup - La Pistaccheria CMS v1
 
-> **Status**: Preparação para Fase 1 (Auth)  
-> **Data**: Junho 2026  
-> **Próximo passo**: Implementar AuthContext e tela de login
+Status: schema final simplificado (sem cms_users e sem Supabase Storage)
 
----
+## 1) Criar projeto no Supabase
+1. Acesse supabase.com e crie um projeto novo.
+2. Regiao recomendada: mais proxima do Brasil.
+3. Em Settings -> API, copie:
+- Project URL
+- anon public key
 
-## 📋 Índice
+## 2) Criar usuarios no Auth
+1. Va em Authentication -> Users.
+2. Crie os 3 usuarios do CMS (Anne, Fz e voce).
+3. Copie os UUIDs de cada usuario.
 
-1. [Criar projeto Supabase](#1-criar-projeto-supabase)
-2. [Configurar Auth](#2-configurar-auth)
-3. [Executar SQL de setup](#3-executar-sql-de-setup)
-4. [Criar Storage bucket](#4-criar-storage-bucket)
-5. [Preencher .env.local](#5-preencher-envlocal)
-6. [Verificar setup](#6-verificar-setup)
+## 3) Preparar o SQL consolidado
+Arquivo: supabase-setup.sql
 
----
+Antes de executar, confirme o UUID de admin no script:
+- aab02bda-97ba-4404-b7f3-9879f0098bf0
 
-## 1. Criar projeto Supabase
+Onde achar os UUIDs:
+- Supabase Dashboard -> Authentication -> Users -> coluna ID
 
-### Passo 1.1: Criar conta/login
-- Acesse [supabase.com](https://supabase.com)
-- Faça login com GitHub (recomendado)
-- Clique em **"New project"**
+## 4) Executar SQL em uma unica vez
+1. Abra SQL Editor -> New Query.
+2. Cole o conteudo completo de supabase-setup.sql.
+3. Execute uma vez.
 
-### Passo 1.2: Configurar projeto
-- **Name**: `la-pistaccheria` (ou similar)
-- **Database Password**: Gere uma senha forte (Supabase fornece opção)
-- **Region**: Escolha a mais próxima do Brasil (ex: `South America (São Paulo)` se disponível, ou `US East` como fallback)
-- Clique em **"Create new project"**
+O script cria:
+- funcao public.is_cms_admin() com allowlist de UUIDs
+- tabela public.products
+- indices
+- trigger de updated_at
+- RLS de products
+- seed com os 6 produtos atuais
 
-⏱️ Aguarde ~2 minutos enquanto o projeto é criado...
+## 5) Configurar variaveis locais
+1. Na raiz do projeto, copie .env.example para .env.local.
+2. Preencha:
+- VITE_SUPABASE_URL
+- VITE_SUPABASE_ANON_KEY
 
-### Passo 1.3: Copiar credenciais
-Quando o projeto estiver pronto, vá para **Settings → API**:
-- Copie `Project URL` (ex: `https://xxxxx.supabase.co`)
-- Copie `anon public` key
+## 6) Validacao rapida
+No Supabase:
+- Table Editor: products com 6 registros
+- SQL: funcao is_cms_admin criada
 
-Salve essas credenciais — vão ser usadas em `.env.local`.
+No projeto:
+- npm run dev sem erro de variavel ausente
 
----
-
-## 2. Configurar Auth
-
-### Passo 2.1: Habilitar Email/Password Auth
-No menu lateral:
-- Clique em **Authentication**
-- Clique em **Providers**
-- Procure por **Email** e garanta que está ativado (deve estar por padrão)
-- Verifique se "Confirm email" está **desativado** (para dev local)
-
-### Passo 2.2: Configurar JWT Secret (opcional para dev, importante para prod)
-Ainda em **Authentication → Providers**:
-- Vá para **JWT Settings**
-- Copie o `JWT Secret` (você vai usar apenas em prod, ignore por enquanto)
-
-### Passo 2.3: Criar primeiro usuário admin
-- Vá para **Authentication → Users**
-- Clique em **"Add user"** → **"Create new user"**
-- Email: `admin@lapistaccheria.local` (para dev)
-- Password: Digite uma senha forte
-- Confirme
-
-⚠️ **IMPORTANTE**: Copie o `UUID` desse usuário (aparece na lista) — você vai precisar no SQL seed!
-
----
-
-## 3. Executar SQL de setup
-
-### Passo 3.1: Preparar SQL
-1. Abra `supabase-setup.sql` neste repositório
-2. **Encontre todas as ocorrências de `'YOUR-USER-ID-HERE'`**
-3. **Substitua** pelo UUID do usuário admin que você copinou no Passo 2.3
-
-Exemplo:
-```sql
--- Antes:
-created_by = 'YOUR-USER-ID-HERE'
-
--- Depois (exemplo real):
-created_by = '550e8400-e29b-41d4-a716-446655440000'
-```
-
-### Passo 3.2: Executar no Supabase
-- Dashboard → **SQL Editor**
-- Clique em **"New Query"**
-- **Cole o conteúdo completo do supabase-setup.sql modificado**
-- Clique em **"Run"** (triângulo ▶️)
-
-✅ Se tudo correr bem, você verá:
-```
-Query complete, X rows affected
-```
-
-### Passo 3.3: Verificar tabelas
-- Vá para **Table Editor** no menu lateral
-- Você deve ver:
-  - ✅ `products` (6 produtos seed)
-  - ✅ `cms_users` (vazio por enquanto)
-
-**Se tiver erros**, clique em cada um e veja a mensagem. Erros comuns:
-- "Tabela já existe" → Você pode rodar safe (não causa problema)
-- "UUID inválido" → Verifica se você substituiu `YOUR-USER-ID-HERE` corretamente
-
----
-
-## 4. Criar Storage bucket
-
-### Passo 4.1: Criar bucket
-- Dashboard → **Storage** (lado esquerdo)
-- Clique em **"Create bucket"**
-- Name: `la-pistaccheria`
-- Deixe **"Public bucket"** ativado (vamos usar URLs públicas)
-- Clique em **"Create bucket"**
-
-### Passo 4.2: Configurar CORS (opcional, mas recomendado)
-- Clique no bucket `la-pistaccheria`
-- Vá para **Settings**
-- Em **CORS Configuration**, deixe em branco (Supabase default é permissivo para dev)
-
-✅ Seu bucket está pronto para receber uploads!
-
----
-
-## 5. Preencher .env.local
-
-### Passo 5.1: Criar arquivo .env.local
-```bash
-# Na raiz do projeto
-cp .env.example .env.local
-```
-
-### Passo 5.2: Preencher credenciais
-```bash
-# .env.local
-
-VITE_SUPABASE_URL=https://xxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=xxxxxxxxxxxxxxxx
-```
-
-Substitua com as credenciais que você salvou no Passo 1.3.
-
-### Passo 5.3: Verificar
-```bash
-# Rodar dev para testar
-npm run dev
-```
-
-Abra o browser em `http://localhost:5173` — se funcionar sem erros de console sobre Supabase, você está pronto!
-
----
-
-## 6. Verificar setup
-
-### Checklist final
-
-- [ ] Projeto Supabase criado
-- [ ] Auth Email/Password habilitado
-- [ ] Usuário admin criado (Email: `admin@lapistaccheria.local`)
-- [ ] SQL executado com sucesso
-  - [ ] Tabela `products` com 6 registros
-  - [ ] Tabela `cms_users` criada
-  - [ ] Políticas RLS criadas
-- [ ] Storage bucket `la-pistaccheria` criado (público)
-- [ ] `.env.local` preenchido com credenciais
-- [ ] `npm run dev` funciona sem erros
-
-### Teste manual (opcional)
-
-Se quiser testar a conexão antes de implementar o frontend:
-
-1. Abra **Table Editor → products**
-2. Verá os 6 produtos seed
-3. Clique em um produto
-4. Mude `active = FALSE`
-5. Clique em **"Save"**
-6. Se salvou, RLS e database estão funcionando ✅
-
----
-
-## 🆘 Troubleshooting
-
-### "Permission denied" ao executar SQL
-**Causa**: Você não tem credenciais de admin  
-**Solução**: Certifique-se de que está logado no Supabase com a conta proprietária do projeto
-
-### "UUID inválido" no seed
-**Causa**: Você não substituiu `YOUR-USER-ID-HERE` corretamente  
-**Solução**: 
-1. Vá para **Authentication → Users**
-2. Copie exatamente o UUID do admin (sem espaços)
-3. Vá para **SQL Editor**
-4. Execute: `SELECT id FROM public.cms_users LIMIT 1;` para ver IDs inseridos
-
-### "Bucket já existe"
-**Causa**: Você criou o bucket manualmente antes  
-**Solução**: OK, você pode usar o bucket existente. Só garanta que é público.
-
-### "VITE_SUPABASE_URL not found" no browser console
-**Causa**: `.env.local` não foi criado ou não foi lido pelo Vite  
-**Solução**:
-```bash
-# Certificar que .env.local existe
-ls -la .env.local
-
-# Se não existe, criar:
-cp .env.example .env.local
-# editar com credenciais corretas
-
-# Reiniciar dev server:
-npm run dev
-```
-
----
-
-## 📚 Próximos passos
-
-Quando tudo estiver funcionando:
-
-1. **Fase 1 - Auth**: Implementar `AuthContext`, tela de login, `ProtectedRoute`
-2. **Fase 2 - Listagem**: Build `AdminProducts.tsx` e queries
-3. **Fase 3 - CRUD**: Build `AdminProductForm.tsx`
-4. **Fase 4 - Integração**: Conectar frontend ao banco de dados
-
----
-
-## 🔗 Referências úteis
-
-- [Supabase Docs](https://supabase.com/docs)
-- [Supabase Auth](https://supabase.com/docs/guides/auth)
-- [Supabase Storage](https://supabase.com/docs/guides/storage)
-- [Supabase RLS](https://supabase.com/docs/guides/auth/row-level-security)
-
----
-
-**Status**: ✅ Pronto para Fase 1
+## Observacoes importantes
+- created_by e nullable por design (ON DELETE SET NULL).
+- Leitura publica retorna apenas active = true.
+- Usuarios autenticados conseguem ler todos os produtos (area admin).
+- Escrita (insert/update/delete) exige is_cms_admin().
+- gallery_urls e JSONB com default [] para suportar multiplas imagens no futuro.
+- image_url no CMS v1 e preenchido manualmente com URL publica (Cloudflare R2/CDN).
+- Upload direto para R2/CDN fica para fase futura.

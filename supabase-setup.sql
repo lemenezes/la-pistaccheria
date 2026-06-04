@@ -1,41 +1,39 @@
-/**
- * LA PISTACCHERIA - Supabase Setup SQL
- * 
- * Execute esses comandos na order no SQL Editor do Supabase
- * Dashboard → SQL Editor → New Query → Cole e execute tudo
+/*
+ * LA PISTACCHERIA - Supabase Setup SQL (Consolidado v1)
+ *
+ * Execucao unica em projeto novo:
+ * 1) Abra Supabase Dashboard -> SQL Editor -> New Query
+ * 2) Antes de executar, confirme o UUID de admin:
+ *    - aab02bda-97ba-4404-b7f3-9879f0098bf0
+ * 3) Cole este arquivo inteiro e rode uma vez
  */
 
 -- ============================================================================
--- 1. CREATE TABLE: cms_users (extensão do auth.users)
+-- 0) Pre requisitos
 -- ============================================================================
 
-CREATE TABLE public.cms_users (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name TEXT,
-  role TEXT NOT NULL DEFAULT 'editor' CHECK (role IN ('admin', 'editor')),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Enable RLS
-ALTER TABLE public.cms_users ENABLE ROW LEVEL SECURITY;
+-- ============================================================================
+-- 1) Funcao de allowlist para escrita no CMS
+--    Admin inicial configurado com o UUID informado.
+--    Authentication -> Users -> coluna ID
+-- ============================================================================
 
--- Políticas RLS para cms_users
-CREATE POLICY "Users can read own cms_users" ON public.cms_users
-  FOR SELECT
-  USING (auth.uid() = id);
-
-CREATE POLICY "Admins can read all cms_users" ON public.cms_users
-  FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.cms_users
-      WHERE id = auth.uid() AND role = 'admin'
-    )
+CREATE OR REPLACE FUNCTION public.is_cms_admin()
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+AS $$
+  SELECT auth.uid() = ANY (
+    ARRAY[
+      'aab02bda-97ba-4404-b7f3-9879f0098bf0'::uuid
+    ]
   );
+$$;
 
 -- ============================================================================
--- 2. CREATE TABLE: products
+-- 2) Tabela products
 -- ============================================================================
 
 CREATE TABLE public.products (
@@ -45,95 +43,42 @@ CREATE TABLE public.products (
   category TEXT NOT NULL,
   short_description TEXT NOT NULL,
   description TEXT NOT NULL,
-  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+  price NUMERIC(10, 2) NOT NULL CHECK (price > 0),
   weight TEXT,
-  badge TEXT CHECK (badge IN ('Novo', 'Destaque', 'Edição Limitada', NULL)),
-  featured BOOLEAN DEFAULT FALSE,
-  active BOOLEAN DEFAULT TRUE,
+  badge TEXT CHECK (badge IS NULL OR badge IN ('Novo', 'Destaque', 'Edição Limitada')),
+  featured BOOLEAN NOT NULL DEFAULT FALSE,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  meta_title TEXT,
+  meta_description TEXT,
   image_url TEXT,
-  image_storage_path TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
-  
-  CONSTRAINT valid_price CHECK (price > 0)
+  gallery_urls JSONB NOT NULL DEFAULT '[]'::JSONB CHECK (jsonb_typeof(gallery_urls) = 'array'),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
 );
 
--- Create indexes
-CREATE INDEX idx_products_slug ON public.products(slug);
+-- Indices
 CREATE INDEX idx_products_category ON public.products(category);
 CREATE INDEX idx_products_active ON public.products(active);
 CREATE INDEX idx_products_featured ON public.products(featured);
+CREATE INDEX idx_products_display_order ON public.products(display_order);
+CREATE INDEX idx_products_created_at ON public.products(created_at DESC);
 CREATE INDEX idx_products_created_by ON public.products(created_by);
 
--- Enable RLS
-ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
-
 -- ============================================================================
--- 3. RLS POLICIES: products
--- ============================================================================
-
--- Qualquer um (autenticado ou não) pode ler produtos ativos
-CREATE POLICY "Anyone can read active products" ON public.products
-  FOR SELECT
-  USING (active = TRUE);
-
--- Autenticados podem ler todos os produtos (para admin)
-CREATE POLICY "Authenticated users can read all products" ON public.products
-  FOR SELECT
-  TO authenticated
-  USING (TRUE);
-
--- Admins podem inserir produtos
-CREATE POLICY "Admins can create products" ON public.products
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.cms_users
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
--- Admins podem atualizar produtos
-CREATE POLICY "Admins can update products" ON public.products
-  FOR UPDATE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.cms_users
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.cms_users
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
--- Admins podem deletar produtos
-CREATE POLICY "Admins can delete products" ON public.products
-  FOR DELETE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.cms_users
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
--- ============================================================================
--- 4. TRIGGER: atualizar updated_at em products
+-- 3) Trigger de updated_at
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.update_products_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 CREATE TRIGGER products_updated_at_trigger
 BEFORE UPDATE ON public.products
@@ -141,11 +86,49 @@ FOR EACH ROW
 EXECUTE FUNCTION public.update_products_updated_at();
 
 -- ============================================================================
--- 5. SEED DATA: Produtos iniciais
+-- 4) RLS: products
 -- ============================================================================
 
--- IMPORTANTE: Substitua 'YOUR-USER-ID-HERE' pelo UUID do seu usuário admin
--- Você pode encontrar no Supabase → Authentication → Users → copiar o UUID
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+
+-- Leitura publica: apenas produtos ativos
+CREATE POLICY "Public can read active products"
+ON public.products
+FOR SELECT
+TO anon, authenticated
+USING (active = TRUE);
+
+-- Leitura autenticada: todos os produtos (necessario para area admin)
+CREATE POLICY "Authenticated can read all products"
+ON public.products
+FOR SELECT
+TO authenticated
+USING (TRUE);
+
+-- Escrita: apenas usuarios da allowlist is_cms_admin()
+CREATE POLICY "CMS admins can insert products"
+ON public.products
+FOR INSERT
+TO authenticated
+WITH CHECK (public.is_cms_admin());
+
+CREATE POLICY "CMS admins can update products"
+ON public.products
+FOR UPDATE
+TO authenticated
+USING (public.is_cms_admin())
+WITH CHECK (public.is_cms_admin());
+
+CREATE POLICY "CMS admins can delete products"
+ON public.products
+FOR DELETE
+TO authenticated
+USING (public.is_cms_admin());
+
+-- ============================================================================
+-- 5) Seed inicial (produtos atuais do products.ts)
+--    created_by mantido como NULL para seed inicial.
+-- ============================================================================
 
 INSERT INTO public.products (
   slug,
@@ -158,12 +141,13 @@ INSERT INTO public.products (
   badge,
   featured,
   active,
+  display_order,
+  meta_title,
+  meta_description,
   image_url,
-  image_storage_path,
+  gallery_urls,
   created_by
 ) VALUES
-
--- 1. Pasta di Pistacchio
 (
   'pasta-di-pistacchio',
   'Pasta di Pistacchio',
@@ -175,12 +159,13 @@ INSERT INTO public.products (
   'Destaque',
   TRUE,
   TRUE,
+  20,
+  'Pasta di Pistacchio | La Pistaccheria',
+  'Pasta pura de pistache de Bronte DOP, aveludada e sem aditivos.',
   'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=900&h=900&q=85&auto=format&fit=crop',
-  NULL,
-  'YOUR-USER-ID-HERE'
+  '[]'::JSONB,
+  NULL
 ),
-
--- 2. Cremino al Pistacchio
 (
   'cremino-al-pistacchio',
   'Cremino al Pistacchio',
@@ -192,12 +177,13 @@ INSERT INTO public.products (
   'Edição Limitada',
   TRUE,
   TRUE,
+  10,
+  'Cremino al Pistacchio | La Pistaccheria',
+  'Bombom de camadas com ganache de pistache e chocolate branco belga.',
   'https://images.unsplash.com/photo-1481391243133-f96216dcb5d2?w=900&h=900&q=85&auto=format&fit=crop',
-  NULL,
-  'YOUR-USER-ID-HERE'
+  '[]'::JSONB,
+  NULL
 ),
-
--- 3. Torta Pistacchio e Limone
 (
   'torta-pistacchio-e-limone',
   'Torta Pistacchio e Limone',
@@ -209,12 +195,13 @@ INSERT INTO public.products (
   NULL,
   TRUE,
   TRUE,
+  30,
+  'Torta Pistacchio e Limone | La Pistaccheria',
+  'Torta de massa amanteigada com creme de pistache e limão siciliano.',
   'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=900&h=900&q=85&auto=format&fit=crop',
-  NULL,
-  'YOUR-USER-ID-HERE'
+  '[]'::JSONB,
+  NULL
 ),
-
--- 4. Cannolo al Pistacchio
 (
   'cannolo-al-pistacchio',
   'Cannolo al Pistacchio',
@@ -226,12 +213,13 @@ INSERT INTO public.products (
   'Novo',
   FALSE,
   TRUE,
+  40,
+  'Cannolo al Pistacchio | La Pistaccheria',
+  'Cannoli siciliani com creme de ricota e pistache, casquinha crocante.',
   'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=900&h=900&q=85&auto=format&fit=crop',
-  NULL,
-  'YOUR-USER-ID-HERE'
+  '[]'::JSONB,
+  NULL
 ),
-
--- 5. Tartufo di Pistacchio
 (
   'tartufo-di-pistacchio',
   'Tartufo di Pistacchio',
@@ -243,12 +231,13 @@ INSERT INTO public.products (
   NULL,
   FALSE,
   TRUE,
+  50,
+  'Tartufo di Pistacchio | La Pistaccheria',
+  'Trufa artesanal com cobertura de chocolate 70% e interior cremoso.',
   'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=900&h=900&q=85&auto=format&fit=crop',
-  NULL,
-  'YOUR-USER-ID-HERE'
+  '[]'::JSONB,
+  NULL
 ),
-
--- 6. Granella Croccante
 (
   'granella-croccante',
   'Granella Croccante',
@@ -260,7 +249,10 @@ INSERT INTO public.products (
   NULL,
   FALSE,
   TRUE,
+  60,
+  'Granella Croccante | La Pistaccheria',
+  'Pistache de Bronte torrado e granulado com flor de sal siciliana.',
   'https://commons.wikimedia.org/wiki/Special:FilePath/Cezerye_with_pistachio_nuts.jpg',
-  NULL,
-  'YOUR-USER-ID-HERE'
+  '[]'::JSONB,
+  NULL
 );
