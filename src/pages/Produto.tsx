@@ -19,39 +19,45 @@ export default function Produto() {
   const { addItem } = useCart();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    if (!slug) {
-      setProduct(null);
-      setIsLoading(false);
-      return;
-    }
+    if (!slug) return;
 
     const currentSlug = slug;
-
     let ignore = false;
 
     async function loadProductData() {
       setIsLoading(true);
+      setLoadError(false);
 
-      const fallbackProduct =
-        fallbackProducts.find(candidate => candidate.slug === currentSlug) ?? null;
-      if (!ignore && fallbackProduct) {
-        setProduct(fallbackProduct);
-      }
+      try {
+        const [loadedProduct, loadedProducts] = await Promise.all([
+          fetchPublicProductBySlug(currentSlug),
+          fetchPublicProducts()
+        ]);
 
-      const [loadedProduct, loadedProducts] = await Promise.all([
-        fetchPublicProductBySlug(currentSlug),
-        fetchPublicProducts()
-      ]);
+        if (!ignore) {
+          // fetchPublicProductBySlug já lida com fallback internamente
+          // Se retorna null, significa que o produto não está disponível publicamente
+          // (pode estar inativo, não existir, ou erro de conexão sem fallback)
+          setProduct(loadedProduct);
+          setProducts(loadedProducts.length > 0 ? loadedProducts : fallbackProducts);
 
-      if (!ignore) {
-        setProduct(loadedProduct);
-        setProducts(loadedProducts);
-        setIsLoading(false);
+          if (!loadedProduct) {
+            setLoadError(true);
+          }
+
+          setIsLoading(false);
+        }
+      } catch {
+        if (!ignore) {
+          setLoadError(true);
+          setIsLoading(false);
+        }
       }
     }
 
@@ -82,7 +88,7 @@ export default function Produto() {
     );
   }
 
-  if (!product) {
+  if (!product || loadError) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-5">
         <p

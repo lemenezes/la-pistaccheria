@@ -18,10 +18,33 @@ function mapDatabaseProductToProduct(product: DatabaseProduct): Product {
   };
 }
 
+function isConnectionError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const err = error as Record<string, unknown>;
+  const message = typeof err.message === "string" ? err.message.toLowerCase() : "";
+  return (
+    message.includes("network") ||
+    message.includes("timeout") ||
+    message.includes("failed to fetch") ||
+    message.includes("offline") ||
+    err.code === "NETWORK_ERROR" ||
+    err.code === "ERR_NETWORK"
+  );
+}
+
 export async function fetchPublicProducts(): Promise<Product[]> {
   const { data, error } = await getPublicProducts();
 
-  if (error || !data || data.length === 0) {
+  if (error) {
+    // Se for erro de conexão, usa fallback
+    if (isConnectionError(error)) {
+      return fallbackProducts;
+    }
+    // Outro tipo de erro, retorna vazio
+    return [];
+  }
+
+  if (!data || data.length === 0) {
     return fallbackProducts;
   }
 
@@ -33,8 +56,11 @@ export async function fetchPublicProductBySlug(
 ): Promise<Product | null> {
   const { data, error } = await getPublicProductBySlug(slug);
 
+  // Para produto individual, não usamos fallback
+  // Se houver qualquer erro (conexão, não encontrado, inativo),
+  // retornamos null. O cliente precisa saber que o produto não está disponível.
   if (error || !data) {
-    return fallbackProducts.find((product) => product.slug === slug) ?? null;
+    return null;
   }
 
   return mapDatabaseProductToProduct(data as DatabaseProduct);
