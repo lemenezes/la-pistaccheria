@@ -1,3 +1,5 @@
+import { useAuth } from "../../context/AuthContext";
+
 interface AdminSidebarProps {
   userEmail?: string;
   isLoggingOut: boolean;
@@ -114,17 +116,28 @@ export default function AdminSidebar({
   onLogout,
   onClose,
 }: AdminSidebarProps) {
+  const { user } = useAuth();
+  
+  const displayName =
+    user?.user_metadata?.display_name ||
+    user?.email?.split("@")[0] ||
+    userEmail?.split("@")[0] ||
+    "Administrador";
+  
+  const avatarInitial =
+    (user?.user_metadata?.display_name || userEmail || "A")[0].toUpperCase();
+
   return (
     <div className="h-full flex flex-col py-5">
-      <div className="px-5 mb-8 flex items-start justify-between">
+      <div className="px-5 mb-12 flex items-start justify-between">
         <div>
           <h1
-            className="text-[1.55rem] font-normal text-white leading-[1.05]"
+            className="text-[1.65rem] font-normal text-white leading-[1.02]"
             style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
           >
             La Pistaccheria
           </h1>
-          <p className="text-[8.5px] tracking-[0.18em] uppercase text-white/50 mt-1">
+          <p className="text-[8.5px] tracking-[0.18em] uppercase text-white/50 mt-1.5">
             Confeitaria Italiana
           </p>
         </div>
@@ -151,8 +164,8 @@ export default function AdminSidebar({
               item.active
                 ? "bg-gradient-to-r from-white/20 to-white/10 text-white shadow-[inset_0_1px_3px_rgba(255,255,255,0.2)] border border-white/15"
                 : item.disabled
-                  ? "text-white/30 cursor-default"
-                  : "text-white/75 hover:text-white hover:bg-white/10"
+                  ? "text-white/45 cursor-default"
+                  : "text-white/80 hover:text-white hover:bg-white/10"
             }`}
           >
             <div className="w-5 h-5 flex items-center justify-center text-white/90 flex-shrink-0">
@@ -170,11 +183,11 @@ export default function AdminSidebar({
             className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold uppercase flex-shrink-0"
             style={{ background: "rgba(255,255,255,0.2)", color: "#ffffff" }}
           >
-            {userEmail ? userEmail[0].toUpperCase() : "A"}
+            {avatarInitial}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-white truncate leading-snug">
-              {userEmail ? userEmail.split("@")[0] : "Admin"}
+              {displayName}
             </p>
             <p className="text-[8px] text-white/60 tracking-[0.05em] uppercase mt-0.5 font-medium">Administrador</p>
           </div>
