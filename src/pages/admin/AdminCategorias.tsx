@@ -604,8 +604,51 @@ export default function AdminCategorias() {
           <div className="min-h-full bg-[#F4F2EE]">
             <div className="min-h-full bg-[radial-gradient(circle_at_top_right,rgba(205,189,160,0.22),transparent_28%),radial-gradient(circle_at_22%_0%,rgba(78,102,56,0.08),transparent_22%),linear-gradient(180deg,#F7F3ED_0%,#F2EEE8_100%)] px-4 py-5 md:px-6 md:py-6">
               <div className="mx-auto flex w-full max-w-[1260px] flex-col gap-6">
-                <section className="rounded-[28px] border border-[#E5DED4] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,243,235,0.94))] px-5 py-6 shadow-[0_30px_90px_rgba(42,61,32,0.08)] md:px-7">
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                {/* Mobile header */}
+                <div className="lg:hidden overflow-hidden rounded-[16px] border border-[#E6DFD6] bg-white shadow-[0_2px_12px_rgba(95,87,81,0.06)]">
+                  <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-[#EEE8DF]">
+                    <button
+                      type="button"
+                      onClick={() => setMobileSidebarOpen((value) => !value)}
+                      className="flex flex-col gap-[5px] p-1.5 text-[#5F5751] hover:text-[#1C1C1A] shrink-0"
+                      aria-label="Abrir menu"
+                    >
+                      <span className="block w-5 h-[2px] bg-current rounded" />
+                      <span className="block w-5 h-[2px] bg-current rounded" />
+                      <span className="block w-5 h-[2px] bg-current rounded" />
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <h1 className="text-[1.3rem] font-semibold text-[#1C1C1A] leading-tight">Categorias</h1>
+                      <p className="text-[12px] text-[#9A9189] mt-0.5">
+                        {ui.isLoading
+                          ? "Carregando..."
+                          : `${totalCategories} categoria${totalCategories !== 1 ? "s" : ""} · ${activeCount} ativa${activeCount !== 1 ? "s" : ""} · ${inactiveCount} inativa${inactiveCount !== 1 ? "s" : ""}`}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={openCreateModal}
+                      className="flex items-center gap-1.5 h-9 px-3 text-[13px] font-medium text-white rounded-[8px] shrink-0 bg-[#2A3D20]"
+                    >
+                      <span className="text-[18px] leading-none font-light">+</span>
+                      Nova
+                    </button>
+                  </div>
+                  {ui.error ? (
+                    <div className="px-4 py-2.5 bg-[#FBF2F2] border-b border-[#E0C8C8] text-[12px] text-[#8A3A3A]">
+                      {ui.error}
+                    </div>
+                  ) : null}
+                  {ui.successMessage ? (
+                    <div className="px-4 py-2.5 bg-[#EEF5E9] border-b border-[#CFE0C6] text-[12px] text-[#385329]">
+                      {ui.successMessage}
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Desktop header */}
+                <section className="hidden lg:block rounded-[28px] border border-[#E5DED4] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,243,235,0.94))] px-5 py-6 shadow-[0_30px_90px_rgba(42,61,32,0.08)] md:px-7">
+                  <div className="flex items-start justify-between">
                     <div>
                       <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-[#9A9189]">CMS</p>
                       <h1
@@ -623,15 +666,7 @@ export default function AdminCategorias() {
                           : `${totalCategories} categoria${totalCategories !== 1 ? "s" : ""} · ${activeCount} ativa${activeCount !== 1 ? "s" : ""} · ${inactiveCount} inativa${inactiveCount !== 1 ? "s" : ""}`}
                       </p>
                     </div>
-
-                    <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                      <button
-                        type="button"
-                        onClick={() => setMobileSidebarOpen((value) => !value)}
-                        className="lg:hidden h-11 rounded-full border border-[#D8D0C6] px-5 text-[11px] uppercase tracking-[0.16em] text-[#5F5751]"
-                      >
-                        Menu
-                      </button>
+                    <div className="flex items-center gap-3">
                       <button
                         type="button"
                         onClick={openCreateModal}
@@ -642,13 +677,11 @@ export default function AdminCategorias() {
                       </button>
                     </div>
                   </div>
-
                   {ui.error ? (
                     <div className="mt-5 rounded-[12px] border border-[#E0C8C8] bg-[#FBF2F2] px-4 py-3 text-[13px] text-[#8A3A3A]">
                       {ui.error}
                     </div>
                   ) : null}
-
                   {ui.successMessage ? (
                     <div className="mt-5 rounded-[12px] border border-[#CFE0C6] bg-[#EEF5E9] px-4 py-3 text-[13px] text-[#385329]">
                       {ui.successMessage}

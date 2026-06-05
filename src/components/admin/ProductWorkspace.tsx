@@ -285,9 +285,9 @@ export default function ProductWorkspace() {
         }
         main={
           <div className="min-h-full flex flex-col bg-[#F4F2EE]">
-            <div className="px-4 md:px-6 pt-0 pb-6 flex-1 flex flex-col">
+            <div className="px-4 md:px-6 pt-4 md:pt-0 pb-6 flex-1 flex flex-col gap-4 md:gap-0">
               {/* Header + filtros */}
-              <div className="bg-white rounded-b-none">
+              <div className="overflow-hidden rounded-[16px] md:rounded-none border border-[#E6DFD6] md:border-0 bg-white shadow-[0_2px_12px_rgba(95,87,81,0.06)] md:shadow-none">
                 <ProductListToolbar
                       query={query}
                       filter={filter}
@@ -303,7 +303,7 @@ export default function ProductWorkspace() {
                     />
               </div>
               {/* Card da lista */}
-              <div className="bg-white border border-[#E5E0D8] border-t-0 rounded-b-[8px] overflow-hidden flex-1">
+              <div className="bg-white overflow-hidden flex-1 rounded-[16px] md:rounded-none md:rounded-b-[8px] border border-[#E6DFD6] md:border-[#E5E0D8] md:border-t-0">
                 <ProductList
                   products={paginatedProducts}
                   selectedProductId={selectedProductId}

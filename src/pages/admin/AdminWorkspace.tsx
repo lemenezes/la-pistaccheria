@@ -310,8 +310,62 @@ export default function AdminWorkspace() {
         <div className="min-h-full bg-[#F4F2EE]">
           <div className="min-h-full bg-[radial-gradient(circle_at_top_right,rgba(205,189,160,0.22),transparent_28%),radial-gradient(circle_at_22%_0%,rgba(78,102,56,0.08),transparent_22%),linear-gradient(180deg,#F7F3ED_0%,#F2EEE8_100%)] px-4 py-5 md:px-6 md:py-6">
             <div className="mx-auto flex w-full max-w-[1260px] flex-col gap-6">
-              <section className="rounded-[28px] border border-[#E5DED4] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,243,235,0.94))] px-5 py-6 shadow-[0_30px_90px_rgba(42,61,32,0.08)] md:px-7">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              {/* Mobile header */}
+              <div className="lg:hidden overflow-hidden rounded-[16px] border border-[#E6DFD6] bg-white shadow-[0_2px_12px_rgba(95,87,81,0.06)]">
+                <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-[#EEE8DF]">
+                  <button
+                    type="button"
+                    onClick={() => setMobileSidebarOpen((value) => !value)}
+                    className="flex flex-col gap-[5px] p-1.5 text-[#5F5751] hover:text-[#1C1C1A] shrink-0"
+                    aria-label="Abrir menu"
+                  >
+                    <span className="block w-5 h-[2px] bg-current rounded" />
+                    <span className="block w-5 h-[2px] bg-current rounded" />
+                    <span className="block w-5 h-[2px] bg-current rounded" />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-[1.3rem] font-semibold text-[#1C1C1A] leading-tight">Dashboard</h1>
+                    <p className="text-[12px] text-[#9A9189] mt-0.5">Bem-vindo de volta, {userFirstName}.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <label className="flex flex-1 items-center gap-2 h-9 rounded-[8px] border border-[#E2DBD1] bg-[#F9F7F4] px-3 text-[#5F5751]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" className="h-4 w-4 shrink-0 text-[#9A9189]">
+                      <rect x="5" y="4" width="14" height="16" rx="2" />
+                      <path d="M8 2v4M16 2v4M8 10h8" />
+                    </svg>
+                    <select
+                      value={periodDays}
+                      onChange={(event) => setPeriodDays(Number(event.target.value) as (typeof PERIOD_OPTIONS)[number]["value"])}
+                      className="w-full bg-transparent text-[13px] text-[#3E3934] outline-none"
+                      aria-label="Filtrar periodo do dashboard"
+                    >
+                      {PERIOD_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/admin/produtos/novo")}
+                    className="flex items-center gap-1.5 h-9 px-3 text-[13px] font-medium text-white rounded-[8px] shrink-0 bg-[#2A3D20]"
+                  >
+                    <span className="text-[18px] leading-none font-light">+</span>
+                    Novo
+                  </button>
+                </div>
+                {error ? (
+                  <div className="px-4 py-2.5 bg-[#FBF2F2] border-t border-[#E0C8C8] text-[12px] text-[#8A3A3A]">
+                    {error}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Desktop header */}
+              <section className="hidden lg:block rounded-[28px] border border-[#E5DED4] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,243,235,0.94))] px-5 py-6 shadow-[0_30px_90px_rgba(42,61,32,0.08)] md:px-7">
+                <div className="flex items-start justify-between">
                   <div>
                     <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-[#9A9189]">CMS</p>
                     <h1
@@ -324,15 +378,7 @@ export default function AdminWorkspace() {
                       Bem-vindo de volta, {userFirstName}. Aqui esta um resumo da sua loja.
                     </p>
                   </div>
-
-                  <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                    <button
-                      type="button"
-                      onClick={() => setMobileSidebarOpen((value) => !value)}
-                      className="lg:hidden h-11 rounded-full border border-[#D8D0C6] px-5 text-[11px] uppercase tracking-[0.16em] text-[#5F5751]"
-                    >
-                      Menu
-                    </button>
+                  <div className="flex items-center gap-3">
                     <label className="flex min-w-[190px] items-center gap-3 rounded-full border border-[#E2DBD1] bg-white/80 px-4 py-3 text-[#5F5751] shadow-[0_10px_25px_rgba(95,87,81,0.05)]">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" className="h-4 w-4 shrink-0">
                         <rect x="5" y="4" width="14" height="16" rx="2" />
@@ -361,52 +407,52 @@ export default function AdminWorkspace() {
                     </button>
                   </div>
                 </div>
-
                 {error ? (
                   <div className="mt-5 rounded-[14px] border border-[#E0C8C8] bg-[#FBF2F2] px-4 py-3 text-[13px] text-[#8A3A3A]">
                     {error}
                   </div>
                 ) : null}
-
-                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <SummaryCard
-                    icon="products"
-                    label="Total de produtos"
-                    value={isLoading ? "..." : totalProducts}
-                    detail={isLoading ? "Carregando catalogo" : `${filteredProducts.length} cadastrados nos ${formatRelativePeriod(periodDays)}`}
-                    trend={isLoading ? undefined : formatGrowthLabel(filteredProducts.length, previousProductsInPeriod, "novo", "novos")}
-                    accentClassName="border-[#DCE7D2] bg-[linear-gradient(180deg,rgba(241,247,236,0.98),rgba(252,249,243,0.98))]"
-                    iconClassName="border-[#C9D9BB] bg-[#E6F0DE] text-[#315025]"
-                  />
-                  <SummaryCard
-                    icon="active"
-                    label="Produtos ativos"
-                    value={isLoading ? "..." : activeProducts}
-                    detail={isLoading ? "Carregando operacao" : `${productActivationRate}% do catalogo ativo`}
-                    trend={isLoading ? undefined : `${activeProductsInPeriod} ativos criados nos ${formatRelativePeriod(periodDays)}`}
-                    accentClassName="border-[#D3DED0] bg-[linear-gradient(180deg,rgba(230,238,226,0.98),rgba(248,245,239,0.98))]"
-                    iconClassName="border-[#B8C9B4] bg-[#DCE8D7] text-[#23361C]"
-                  />
-                  <SummaryCard
-                    icon="categories"
-                    label="Categorias ativas"
-                    value={isLoading ? "..." : activeCategories}
-                    detail={isLoading ? "Carregando categorias" : `${newCategoriesInPeriod} criadas nos ${formatRelativePeriod(periodDays)}`}
-                    trend={isLoading ? undefined : formatGrowthLabel(newCategoriesInPeriod, previousCategoriesInPeriod, "nova", "novas")}
-                    accentClassName="border-[#E7DEC9] bg-[linear-gradient(180deg,rgba(247,241,225,0.98),rgba(252,249,243,0.98))]"
-                    iconClassName="border-[#E0D1AF] bg-[#F3E7C9] text-[#876923]"
-                  />
-                  <SummaryCard
-                    icon="orders"
-                    label="Pedidos"
-                    value="Modulo em breve"
-                    detail="Integracao de pedidos ainda nao configurada"
-                    accentClassName="border-[#E7DDD2] bg-[linear-gradient(180deg,rgba(247,241,234,0.98),rgba(252,248,243,0.98))]"
-                    iconClassName="border-[#DFCFC0] bg-[#F0E3D7] text-[#8B6B4D]"
-                    valueClassName="text-[1.45rem] md:text-[1.7rem] leading-tight max-w-[10ch]"
-                  />
-                </div>
               </section>
+
+              {/* Summary cards — always visible */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <SummaryCard
+                  icon="products"
+                  label="Total de produtos"
+                  value={isLoading ? "..." : totalProducts}
+                  detail={isLoading ? "Carregando catalogo" : `${filteredProducts.length} cadastrados nos ${formatRelativePeriod(periodDays)}`}
+                  trend={isLoading ? undefined : formatGrowthLabel(filteredProducts.length, previousProductsInPeriod, "novo", "novos")}
+                  accentClassName="border-[#DCE7D2] bg-[linear-gradient(180deg,rgba(241,247,236,0.98),rgba(252,249,243,0.98))]"
+                  iconClassName="border-[#C9D9BB] bg-[#E6F0DE] text-[#315025]"
+                />
+                <SummaryCard
+                  icon="active"
+                  label="Produtos ativos"
+                  value={isLoading ? "..." : activeProducts}
+                  detail={isLoading ? "Carregando operacao" : `${productActivationRate}% do catalogo ativo`}
+                  trend={isLoading ? undefined : `${activeProductsInPeriod} ativos criados nos ${formatRelativePeriod(periodDays)}`}
+                  accentClassName="border-[#D3DED0] bg-[linear-gradient(180deg,rgba(230,238,226,0.98),rgba(248,245,239,0.98))]"
+                  iconClassName="border-[#B8C9B4] bg-[#DCE8D7] text-[#23361C]"
+                />
+                <SummaryCard
+                  icon="categories"
+                  label="Categorias ativas"
+                  value={isLoading ? "..." : activeCategories}
+                  detail={isLoading ? "Carregando categorias" : `${newCategoriesInPeriod} criadas nos ${formatRelativePeriod(periodDays)}`}
+                  trend={isLoading ? undefined : formatGrowthLabel(newCategoriesInPeriod, previousCategoriesInPeriod, "nova", "novas")}
+                  accentClassName="border-[#E7DEC9] bg-[linear-gradient(180deg,rgba(247,241,225,0.98),rgba(252,249,243,0.98))]"
+                  iconClassName="border-[#E0D1AF] bg-[#F3E7C9] text-[#876923]"
+                />
+                <SummaryCard
+                  icon="orders"
+                  label="Pedidos"
+                  value="Modulo em breve"
+                  detail="Integracao de pedidos ainda nao configurada"
+                  accentClassName="border-[#E7DDD2] bg-[linear-gradient(180deg,rgba(247,241,234,0.98),rgba(252,248,243,0.98))]"
+                  iconClassName="border-[#DFCFC0] bg-[#F0E3D7] text-[#8B6B4D]"
+                  valueClassName="text-[1.45rem] md:text-[1.7rem] leading-tight max-w-[10ch]"
+                />
+              </div>
 
               <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.95fr)]">
                 <article className="overflow-hidden rounded-[26px] border border-[#E6DFD6] bg-white/90 shadow-[0_24px_70px_rgba(95,87,81,0.07)] backdrop-blur-sm">

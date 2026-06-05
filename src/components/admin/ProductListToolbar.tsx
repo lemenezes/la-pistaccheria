@@ -57,7 +57,7 @@ export default function ProductListToolbar({
   return (
     <div>
       {/* Faixa 1 — título + busca + novo */}
-      <div className="flex items-center gap-4 px-4 md:px-6 pt-5 pb-4">
+      <div className="flex items-center gap-4 px-4 md:px-6 pt-5 pb-4 border-b border-[#E5E0D8]">
         {/* Hamburguer (mobile/tablet apenas) */}
         <button
           type="button"
@@ -75,7 +75,7 @@ export default function ProductListToolbar({
           <h2 className="text-[1.35rem] md:text-[1.6rem] font-semibold text-[#1C1C1A] leading-[1.1]">
             Produtos
           </h2>
-          <p className="text-[11.5px] text-[#9A9189] mt-0.5 hidden sm:block">
+          <p className="text-[11.5px] text-[#9A9189] mt-0.5">
             Gerencie seus produtos, preços, descrições e imagens.
           </p>
         </div>
