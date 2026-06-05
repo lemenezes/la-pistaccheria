@@ -16,7 +16,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", iconType: "home", disabled: true },
+  { label: "Dashboard", iconType: "home", path: "/admin" },
   { label: "Produtos", iconType: "box", path: "/admin/produtos" },
   { label: "Categorias", iconType: "grid", path: "/admin/categorias" },
   { label: "Pedidos", iconType: "clipboard", disabled: true },
@@ -135,10 +135,32 @@ export default function AdminSidebar({
   const avatarInitial =
     (user?.user_metadata?.display_name || userEmail || "A")[0].toUpperCase();
 
+  function getItemClassName(item: NavItem) {
+    const isActive = isItemActive(item);
+    const isDashboard = item.path === "/admin";
+
+    if (isActive && isDashboard) {
+      return "bg-[linear-gradient(90deg,rgba(255,255,255,0.24),rgba(233,242,223,0.18))] text-white border border-[#D5E1C7]/35 shadow-[inset_0_1px_4px_rgba(255,255,255,0.22),0_8px_22px_rgba(15,24,9,0.18)]";
+    }
+
+    if (isActive) {
+      return "bg-gradient-to-r from-white/20 to-white/10 text-white shadow-[inset_0_1px_3px_rgba(255,255,255,0.2)] border border-white/15";
+    }
+
+    if (item.disabled) {
+      return "text-white/45 cursor-default";
+    }
+
+    return "text-white/80 hover:text-white hover:bg-white/10";
+  }
+
   function isItemActive(item: NavItem) {
     if (!item.path) return false;
+    if (item.path === "/admin") {
+      return location.pathname === "/admin";
+    }
     if (item.path === "/admin/produtos") {
-      return location.pathname === "/admin" || location.pathname.startsWith("/admin/produtos");
+      return location.pathname.startsWith("/admin/produtos");
     }
 
     return location.pathname.startsWith(item.path);
@@ -182,18 +204,12 @@ export default function AdminSidebar({
               navigate(item.path);
               onClose?.();
             }}
-            className={`w-full text-left flex items-center gap-3 px-3.5 py-3 text-sm tracking-[0.02em] transition-all duration-200 rounded-md ${
-              isItemActive(item)
-                ? "bg-gradient-to-r from-white/20 to-white/10 text-white shadow-[inset_0_1px_3px_rgba(255,255,255,0.2)] border border-white/15"
-                : item.disabled
-                  ? "text-white/45 cursor-default"
-                  : "text-white/80 hover:text-white hover:bg-white/10"
-            }`}
+            className={`w-full text-left flex items-center gap-3 px-3.5 py-3 text-sm tracking-[0.02em] transition-all duration-200 rounded-md ${getItemClassName(item)}`}
           >
-            <div className="w-5 h-5 flex items-center justify-center text-white/90 flex-shrink-0">
+            <div className={`w-5 h-5 flex items-center justify-center flex-shrink-0 ${isItemActive(item) ? "text-white" : "text-white/90"}`}>
               <IconSVG type={item.iconType} className="w-full h-full" />
             </div>
-            <span className="font-medium">{item.label}</span>
+            <span className={`font-medium ${item.path === "/admin" && isItemActive(item) ? "tracking-[0.03em]" : ""}`}>{item.label}</span>
           </button>
         ))}
       </nav>
