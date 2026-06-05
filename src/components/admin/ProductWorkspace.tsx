@@ -212,22 +212,36 @@ export default function ProductWorkspace() {
           />
         }
         main={
-          <div className="h-full flex flex-col">
-            <ProductListToolbar
-              query={query}
-              filter={filter}
-              onQueryChange={setQuery}
-              onFilterChange={setFilter}
-              onNewProduct={handleOpenCreate}
-              onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
-            />
-            <ProductList
-              products={filteredProducts}
-              selectedProductId={selectedProductId}
-              isLoading={isLoading}
-              error={error}
-              onSelectProduct={handleSelectProduct}
-            />
+          <div className="min-h-full flex flex-col bg-[#F4F2EE]">
+            <div className="px-4 md:px-6 pt-0 pb-6 flex-1 flex flex-col">
+              {/* Header + filtros */}
+              <div className="bg-white rounded-b-none">
+                <ProductListToolbar
+                  query={query}
+                  filter={filter}
+                  onQueryChange={setQuery}
+                  onFilterChange={setFilter}
+                  onNewProduct={handleOpenCreate}
+                  onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
+                />
+              </div>
+              {/* Card da lista */}
+              <div className="bg-white border border-[#E5E0D8] border-t-0 rounded-b-[8px] overflow-hidden flex-1">
+                <ProductList
+                  products={filteredProducts}
+                  selectedProductId={selectedProductId}
+                  isLoading={isLoading}
+                  error={error}
+                  onSelectProduct={handleSelectProduct}
+                />
+                {/* Rodapé da lista */}
+                {!isLoading && filteredProducts.length > 0 && (
+                  <p className="px-6 py-3 text-[11.5px] text-[#B0A9A0] border-t border-[#F0EDE8]">
+                    Mostrando {filteredProducts.length} de {products.length} produto{products.length !== 1 ? "s" : ""}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         }
         panel={

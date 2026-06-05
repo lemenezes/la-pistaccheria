@@ -44,7 +44,7 @@ export default function ProductList({
 
   return (
     <div className="bg-white">
-      <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-0 px-6 py-2.5 border-b border-[#E5E0D8] text-[11px] tracking-[0.1em] uppercase text-[#9A9189] font-medium">
+      <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-0 px-6 py-3.5 border-b border-[#E5E0D8] text-[10.5px] tracking-[0.12em] uppercase text-[#B0A9A0] font-semibold">
         <span>Produto</span>
         <span>Categoria</span>
         <span>Preço</span>

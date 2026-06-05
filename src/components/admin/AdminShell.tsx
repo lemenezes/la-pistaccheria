@@ -41,10 +41,10 @@ export default function AdminShell({
       </aside>
 
       {/* Área principal */}
-      <main className="flex-1 min-w-0 overflow-auto">{main}</main>
+      <main className="flex-1 min-w-0 overflow-auto bg-[#F4F2EE]">{main}</main>
 
       {/* Painel direito: hidden no mobile, visível no md+ */}
-      <aside className="hidden md:flex md:w-[300px] lg:w-[460px] shrink-0 h-screen sticky top-0 flex-col border-l border-[#E5E0D8] bg-[#FAF7F2]">
+      <aside className="hidden md:flex md:w-[300px] lg:w-[380px] shrink-0 h-screen sticky top-0 flex-col border-l border-[#E5E0D8] bg-[#FAF7F2]">
         {panel}
       </aside>
     </div>

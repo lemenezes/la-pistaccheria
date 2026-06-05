@@ -29,10 +29,10 @@ export default function ProductPreviewPanel({ product, onEdit }: ProductPreviewP
   return (
     <div className="h-full flex flex-col relative">
       {/* Imagem */}
-      <div className="px-6 pt-6 pb-4 shrink-0">
+      <div className="px-5 pt-5 pb-3 shrink-0">
         <div
-          className="w-full rounded-[6px] overflow-hidden border border-[#E5E0D8] bg-[#F4F2EE]"
-          style={{ aspectRatio: "16/9" }}
+          className="w-full rounded-md overflow-hidden border border-[#E5E0D8] bg-[#F4F2EE]"
+          style={{ aspectRatio: "4/3" }}
         >
           {product.image_url ? (
             <img
@@ -49,7 +49,7 @@ export default function ProductPreviewPanel({ product, onEdit }: ProductPreviewP
       </div>
 
       {/* Informações */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24">
+      <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-24">
         {/* Status badges */}
         <div className="flex items-center gap-2 mb-3">
           <span
@@ -111,7 +111,7 @@ export default function ProductPreviewPanel({ product, onEdit }: ProductPreviewP
       </div>
 
       {/* Botão fixo no fundo */}
-      <div className="absolute bottom-0 inset-x-0 px-6 py-4 border-t border-[#E5E0D8] bg-[#FAF7F2]">
+      <div className="absolute bottom-0 inset-x-0 px-5 py-4 border-t border-[#E5E0D8] bg-[#FAF7F2]">
         <button
           type="button"
           onClick={onEdit}

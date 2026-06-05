@@ -17,13 +17,13 @@ export default function ProductListItem({
       type="button"
       onClick={onSelect}
       style={isSelected ? { borderLeft: "4px solid #4f6436" } : { borderLeft: "4px solid transparent" }}
-      className={`w-full text-left grid grid-cols-[2fr_1fr_1fr_1fr] gap-0 items-center px-6 py-3.5 border-b border-[#F0EDE8] transition-all ${
+      className={`w-full text-left grid grid-cols-[2fr_1fr_1fr_1fr] gap-0 items-center px-6 py-4 border-b border-[#F0EDE8] transition-all ${
         isSelected ? "bg-[#e6ede0]" : "hover:bg-[#F7F5F2]"
       }`}
     >
       {/* Produto */}
       <div className="flex items-center gap-3 min-w-0 pr-4">
-        <div className="w-12 h-12 border border-[#E5E0D8] bg-[#F0EDE8] shrink-0 overflow-hidden rounded-[3px]">
+        <div className="w-14 h-14 border border-[#E5E0D8] bg-[#F0EDE8] shrink-0 overflow-hidden rounded-md">
           {product.image_url ? (
             <img
               src={product.image_url}
@@ -33,7 +33,7 @@ export default function ProductListItem({
           ) : null}
         </div>
         <div className="min-w-0">
-          <p className="text-[13px] font-medium text-[#1C1C1A] leading-tight truncate">
+          <p className="text-[14px] font-semibold text-[#1C1C1A] leading-tight truncate">
             {product.name}
           </p>
           {product.weight && (
