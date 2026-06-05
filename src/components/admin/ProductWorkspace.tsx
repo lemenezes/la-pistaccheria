@@ -25,6 +25,8 @@ export default function ProductWorkspace() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mobileProductOpen, setMobileProductOpen] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -167,6 +169,7 @@ export default function ProductWorkspace() {
   function handleSelectProduct(id: string) {
     setSubmitError(null);
     setSelectedProductId(id);
+    setMobileProductOpen(true);
   }
 
   function handleOpenEdit() {
@@ -177,6 +180,10 @@ export default function ProductWorkspace() {
   function handleCloseModal() {
     setSubmitError(null);
     setModalMode(null);
+  }
+
+  function handleCloseMobileProduct() {
+    setMobileProductOpen(false);
   }
 
   async function handleLogout() {
@@ -194,11 +201,14 @@ export default function ProductWorkspace() {
   return (
     <>
       <AdminShell
+        isSidebarOpen={mobileSidebarOpen}
+        onCloseSidebar={() => setMobileSidebarOpen(false)}
         sidebar={
           <AdminSidebar
             userEmail={user?.email}
             isLoggingOut={isLoggingOut}
             onLogout={handleLogout}
+            onClose={() => setMobileSidebarOpen(false)}
           />
         }
         main={
@@ -209,6 +219,7 @@ export default function ProductWorkspace() {
               onQueryChange={setQuery}
               onFilterChange={setFilter}
               onNewProduct={handleOpenCreate}
+              onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
             />
             <ProductList
               products={filteredProducts}
@@ -226,6 +237,36 @@ export default function ProductWorkspace() {
           />
         }
       />
+
+      {/* Overlay de produto no mobile (substitui o painel lateral) */}
+      {mobileProductOpen && selectedProduct && (
+        <div className="fixed inset-0 z-30 flex flex-col bg-[#FAF7F2] md:hidden">
+          {/* Header do overlay */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E5E0D8] bg-white shrink-0">
+            <button
+              type="button"
+              onClick={handleCloseMobileProduct}
+              className="flex items-center gap-1.5 text-[13px] text-[#5F5751] hover:text-[#1C1C1A] transition-colors"
+            >
+              <span className="text-[16px]">←</span>
+              Voltar
+            </button>
+            <span className="flex-1 text-[13px] font-medium text-[#1C1C1A] truncate text-center">
+              {selectedProduct.name}
+            </span>
+            <span className="w-[52px]" />{/* spacer para centralizar o título */}
+          </div>
+          {/* Conteúdo */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <ProductPreviewPanel
+              product={selectedProduct}
+              onEdit={() => {
+                handleOpenEdit();
+              }}
+            />
+          </div>
+        </div>
+      )}
       {modalMode !== null && (
         <ProductEditModal
           mode={modalMode}

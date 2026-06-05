@@ -27,7 +27,7 @@ export default function ProductPreviewPanel({ product, onEdit }: ProductPreviewP
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col relative">
       {/* Imagem */}
       <div className="px-6 pt-6 pb-4 shrink-0">
         <div
@@ -49,7 +49,7 @@ export default function ProductPreviewPanel({ product, onEdit }: ProductPreviewP
       </div>
 
       {/* Informações */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-6">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-24">
         {/* Status badges */}
         <div className="flex items-center gap-2 mb-3">
           <span
@@ -110,8 +110,8 @@ export default function ProductPreviewPanel({ product, onEdit }: ProductPreviewP
         <p className="text-[11px] text-[#B0A9A0] mb-6">/{product.slug}</p>
       </div>
 
-      {/* Rodapé com botão */}
-      <div className="px-6 py-4 border-t border-[#E5E0D8] shrink-0">
+      {/* Botão fixo no fundo */}
+      <div className="absolute bottom-0 inset-x-0 px-6 py-4 border-t border-[#E5E0D8] bg-[#FAF7F2]">
         <button
           type="button"
           onClick={onEdit}

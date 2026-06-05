@@ -11,12 +11,11 @@ interface ProductEditModalProps {
   onClose: () => void;
 }
 
-type ModalTab = "geral" | "imagens" | "seo";
+type ModalTab = "geral" | "seo";
 
 const TABS: Array<{ id: ModalTab; label: string; fieldId: string }> = [
-  { id: "geral", label: "Geral", fieldId: "pf-modal-name" },
-  { id: "imagens", label: "Imagens", fieldId: "pf-modal-image_url" },
-  { id: "seo", label: "SEO", fieldId: "pf-modal-meta_title" },
+  { id: "geral", label: "Geral", fieldId: "pf-name" },
+  { id: "seo", label: "SEO", fieldId: "pf-meta_title" },
 ];
 
 const FORM_ID = "modal-product-form";

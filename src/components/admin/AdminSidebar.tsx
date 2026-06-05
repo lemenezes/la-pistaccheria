@@ -2,6 +2,7 @@ interface AdminSidebarProps {
   userEmail?: string;
   isLoggingOut: boolean;
   onLogout: () => Promise<void>;
+  onClose?: () => void;
 }
 
 type NavItem = { label: string; icon: string; active?: boolean; disabled?: boolean };
@@ -23,19 +24,33 @@ export default function AdminSidebar({
   userEmail,
   isLoggingOut,
   onLogout,
+  onClose,
 }: AdminSidebarProps) {
   return (
     <div className="h-full flex flex-col py-5">
-      <div className="px-5 mb-6">
-        <h1
-          className="text-[1.4rem] font-normal text-white leading-[1.1]"
-          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-        >
-          La Pistaccheria
-        </h1>
-        <p className="text-[9px] tracking-[0.18em] uppercase text-white/45 mt-0.5">
-          Confeitaria Italiana
-        </p>
+      <div className="px-5 mb-6 flex items-start justify-between">
+        <div>
+          <h1
+            className="text-[1.4rem] font-normal text-white leading-[1.1]"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+          >
+            La Pistaccheria
+          </h1>
+          <p className="text-[9px] tracking-[0.18em] uppercase text-white/45 mt-0.5">
+            Confeitaria Italiana
+          </p>
+        </div>
+        {/* Botão fechar (mobile/tablet) */}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg:hidden w-7 h-7 flex items-center justify-center text-white/50 hover:text-white text-[20px] leading-none -mt-0.5 -mr-1"
+            aria-label="Fechar menu"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       <nav aria-label="Admin navigation" className="flex-1 space-y-0.5 px-2">
