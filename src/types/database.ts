@@ -7,11 +7,24 @@
 
 export type Badge = "Novo" | "Destaque" | "Edição Limitada" | null;
 
+export interface DatabaseCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  image_url: string | null;
+  active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DatabaseProduct {
   id: string;
   slug: string;
   name: string;
   category: string;
+  category_id: string | null;
   short_description: string;
   description: string;
   price: number;
@@ -33,6 +46,7 @@ export interface CreateProductInput {
   slug: string;
   name: string;
   category: string;
+  category_id?: string | null;
   short_description: string;
   description: string;
   price: number;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ProductForm, { type ProductFormValues } from "../../pages/admin/ProductForm";
-import type { DatabaseProduct } from "../../types/database";
+import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 
 interface ProductEditModalProps {
   mode: "create" | "edit";
@@ -9,6 +9,7 @@ interface ProductEditModalProps {
   submitError: string | null;
   onSubmit: (values: ProductFormValues) => Promise<void>;
   onClose: () => void;
+  categories: DatabaseCategory[];
 }
 
 type ModalTab = "geral" | "seo";
@@ -27,6 +28,7 @@ export default function ProductEditModal({
   submitError,
   onSubmit,
   onClose,
+  categories,
 }: ProductEditModalProps) {
   const [activeTab, setActiveTab] = useState<ModalTab>("geral");
 
@@ -125,6 +127,7 @@ export default function ProductEditModal({
             onCancel={onClose}
             error={null}
             hideActions
+            categories={categories}
           />
         </div>
 

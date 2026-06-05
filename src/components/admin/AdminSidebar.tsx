@@ -1,4 +1,5 @@
 import { useAuth } from "../../context/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface AdminSidebarProps {
   userEmail?: string;
@@ -7,12 +8,17 @@ interface AdminSidebarProps {
   onClose?: () => void;
 }
 
-type NavItem = { label: string; iconType: string; active?: boolean; disabled?: boolean };
+type NavItem = {
+  label: string;
+  iconType: string;
+  path?: string;
+  disabled?: boolean;
+};
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", iconType: "home" },
-  { label: "Produtos", iconType: "box", active: true },
-  { label: "Categorias", iconType: "grid", disabled: true },
+  { label: "Dashboard", iconType: "home", disabled: true },
+  { label: "Produtos", iconType: "box", path: "/admin/produtos" },
+  { label: "Categorias", iconType: "grid", path: "/admin/categorias" },
   { label: "Pedidos", iconType: "clipboard", disabled: true },
   { label: "Depoimentos", iconType: "message", disabled: true },
   { label: "Configurações", iconType: "settings", disabled: true },
@@ -116,6 +122,8 @@ export default function AdminSidebar({
   onLogout,
   onClose,
 }: AdminSidebarProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   
   const displayName =
@@ -126,6 +134,15 @@ export default function AdminSidebar({
   
   const avatarInitial =
     (user?.user_metadata?.display_name || userEmail || "A")[0].toUpperCase();
+
+  function isItemActive(item: NavItem) {
+    if (!item.path) return false;
+    if (item.path === "/admin/produtos") {
+      return location.pathname === "/admin" || location.pathname.startsWith("/admin/produtos");
+    }
+
+    return location.pathname.startsWith(item.path);
+  }
 
   return (
     <div className="h-full flex flex-col py-5">
@@ -159,9 +176,14 @@ export default function AdminSidebar({
           <button
             key={item.label}
             type="button"
-            disabled={item.disabled && !item.active}
+            disabled={item.disabled}
+            onClick={() => {
+              if (!item.path || item.disabled) return;
+              navigate(item.path);
+              onClose?.();
+            }}
             className={`w-full text-left flex items-center gap-3 px-3.5 py-3 text-sm tracking-[0.02em] transition-all duration-200 rounded-md ${
-              item.active
+              isItemActive(item)
                 ? "bg-gradient-to-r from-white/20 to-white/10 text-white shadow-[inset_0_1px_3px_rgba(255,255,255,0.2)] border border-white/15"
                 : item.disabled
                   ? "text-white/45 cursor-default"

@@ -1,9 +1,10 @@
 import { useState } from "react";
-import type { DatabaseProduct } from "../../types/database";
+import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 
 export type ProductFormValues = {
   name: string;
   slug: string;
+  category_id: string;
   category: string;
   short_description: string;
   description: string;
@@ -26,6 +27,7 @@ interface ProductFormProps {
   onCancel: () => void;
   error?: string | null;
   hideActions?: boolean;
+  categories: DatabaseCategory[];
 }
 
 const inputClass =
@@ -56,10 +58,25 @@ export default function ProductForm({
   onCancel,
   error,
   hideActions,
+  categories,
 }: ProductFormProps) {
+  const initialCategory = initialData?.category ?? "";
+  const resolvedCategoryByName = categories.find(
+    (category) => category.name.toLowerCase() === initialCategory.toLowerCase()
+  );
+  const initialCategoryId = initialData?.category_id ?? resolvedCategoryByName?.id ?? "";
+  const hasCategoryMatch = categories.some(
+    (category) =>
+      category.id === initialCategoryId ||
+      category.name.toLowerCase() === initialCategory.toLowerCase()
+  );
+  const legacyCategoryOption =
+    initialCategory && !hasCategoryMatch ? initialCategory : "";
+
   const [form, setForm] = useState<ProductFormValues>({
     name: initialData?.name ?? "",
     slug: initialData?.slug ?? "",
+    category_id: initialCategoryId,
     category: initialData?.category ?? "",
     short_description: initialData?.short_description ?? "",
     description: initialData?.description ?? "",
@@ -90,7 +107,7 @@ export default function ProductForm({
   }
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) {
     const { name, value, type } = e.target;
     if (type === "checkbox") {
@@ -101,6 +118,30 @@ export default function ProductForm({
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
+  }
+
+  function handleCategoryChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const selectedValue = e.target.value;
+
+    if (selectedValue.startsWith("legacy:")) {
+      const legacyValue = selectedValue.replace("legacy:", "");
+      setForm((prev) => ({
+        ...prev,
+        category_id: "",
+        category: legacyValue,
+      }));
+      return;
+    }
+
+    const selectedCategory = categories.find(
+      (category) => category.id === selectedValue
+    );
+
+    setForm((prev) => ({
+      ...prev,
+      category_id: selectedValue,
+      category: selectedCategory?.name ?? prev.category,
+    }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -156,16 +197,39 @@ export default function ProductForm({
           <label htmlFor="pf-category" className={labelClass}>
             Categoria <span className="text-[#8A3A3A]">*</span>
           </label>
-          <input
+          <select
             id="pf-category"
-            name="category"
-            type="text"
-            value={form.category}
-            onChange={handleChange}
+            name="category_id"
+            value={
+              form.category_id
+                ? form.category_id
+                : legacyCategoryOption
+                  ? `legacy:${legacyCategoryOption}`
+                  : ""
+            }
+            onChange={handleCategoryChange}
             required
-            autoComplete="off"
             className={inputClass}
-          />
+          >
+            <option value="" disabled>
+              Selecione uma categoria
+            </option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+            {legacyCategoryOption && (
+              <option value={`legacy:${legacyCategoryOption}`}>
+                Legado: {legacyCategoryOption}
+              </option>
+            )}
+          </select>
+          {legacyCategoryOption && !form.category_id && (
+            <p className="text-[10px] text-[#8A3A3A] mt-1">
+              Categoria legada sem correspondencia ativa. Salve para manter compatibilidade temporaria.
+            </p>
+          )}
         </div>
 
         {/* Preço */}

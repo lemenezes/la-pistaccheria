@@ -1,10 +1,23 @@
 export type ProductFilter = "all" | "active" | "inactive" | "featured";
+export type SortOption =
+  | "default"
+  | "newest"
+  | "name_asc"
+  | "name_desc"
+  | "price_asc"
+  | "price_desc"
+  | "display_order";
 
 interface ProductListToolbarProps {
   query: string;
   filter: ProductFilter;
+  sortBy: SortOption;
+  categories: string[];
+  categoryFilter: string;
   onQueryChange: (value: string) => void;
   onFilterChange: (value: ProductFilter) => void;
+  onSortChange: (value: SortOption) => void;
+  onCategoryChange: (value: string) => void;
   onNewProduct: () => void;
   onToggleSidebar: () => void;
 }
@@ -16,14 +29,31 @@ const filterOptions: Array<{ label: string; value: ProductFilter }> = [
   { label: "Destaques", value: "featured" },
 ];
 
+const sortOptions: Array<{ label: string; value: SortOption }> = [
+  { label: "Mais recentes", value: "newest" },
+  { label: "Nome A → Z", value: "name_asc" },
+  { label: "Nome Z → A", value: "name_desc" },
+  { label: "Menor preço", value: "price_asc" },
+  { label: "Maior preço", value: "price_desc" },
+  { label: "Ordem de exibição", value: "display_order" },
+];
+
 export default function ProductListToolbar({
   query,
   filter,
+  sortBy,
+  categories,
+  categoryFilter,
   onQueryChange,
   onFilterChange,
+  onSortChange,
+  onCategoryChange,
   onNewProduct,
   onToggleSidebar,
 }: ProductListToolbarProps) {
+  const selectClass =
+    "h-8 px-2.5 text-[12.5px] text-[#5F5751] border border-[#E5E0D8] bg-white rounded-md hover:border-[#9A9189] transition-colors outline-none focus:border-[#9A9189] cursor-pointer";
+
   return (
     <div>
       {/* Faixa 1 — título + busca + novo */}
@@ -93,8 +123,9 @@ export default function ProductListToolbar({
         </div>
       </div>
 
-      {/* Faixa 2 — filtros + categorias */}
+      {/* Faixa 2 — filtros + categorias + ordenação */}
       <div className="flex items-center justify-between gap-2 px-4 md:px-6 py-2 border-t border-[#E5E0D8] bg-[#F9F7F4]">
+        {/* Filtros de status */}
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none" style={{ WebkitOverflowScrolling: "touch" }}>
           {filterOptions.map((option) => (
             <button
@@ -112,16 +143,30 @@ export default function ProductListToolbar({
           ))}
         </div>
 
-        {/* Seletor de categoria (visual, preparado para expansão) */}
-        <button
-          type="button"
-          className="hidden sm:flex items-center gap-1.5 h-8 px-3 text-[12.5px] text-[#5F5751] border border-[#E5E0D8] bg-white rounded-md hover:border-[#9A9189] transition-colors shrink-0"
-        >
-          Todas as categorias
-          <svg className="w-3.5 h-3.5 text-[#9A9189]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </button>
+        {/* Categoria + Ordenação */}
+        <div className="hidden sm:flex items-center gap-2 shrink-0">
+          <select
+            value={categoryFilter}
+            onChange={(e) => onCategoryChange(e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Todas as categorias</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value as SortOption)}
+            className={selectClass}
+          >
+            <option value="default">Ordenar por</option>
+            {sortOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getProductById, updateProduct } from "../../lib/supabase";
-import type { DatabaseProduct } from "../../types/database";
+import { getCategories, getProductById, updateProduct } from "../../lib/supabase";
+import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 import ProductForm, { type ProductFormValues } from "./ProductForm";
 
 export default function AdminProdutoEditar() {
@@ -13,6 +13,7 @@ export default function AdminProdutoEditar() {
   const [product, setProduct] = useState<DatabaseProduct | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<DatabaseCategory[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -48,6 +49,29 @@ export default function AdminProdutoEditar() {
     };
   }, [id, navigate]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadCategories() {
+      const { data, error } = await getCategories({ activeOnly: true });
+
+      if (ignore) return;
+
+      if (error) {
+        setSubmitError(error.message || "Erro ao carregar categorias ativas.");
+        setCategories([]);
+      } else {
+        setCategories((data || []) as DatabaseCategory[]);
+      }
+    }
+
+    loadCategories();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   async function handleSubmit(values: ProductFormValues) {
     if (!id) return;
     setSubmitError(null);
@@ -63,6 +87,7 @@ export default function AdminProdutoEditar() {
         name: values.name,
         slug: values.slug,
         category: values.category,
+        category_id: values.category_id || null,
         short_description: values.short_description,
         description: values.description,
         price: parseFloat(values.price) || 0,
@@ -138,6 +163,7 @@ export default function AdminProdutoEditar() {
               submitLabel="Salvar Alterações"
               onCancel={() => navigate("/admin/produtos")}
               error={submitError}
+              categories={categories}
             />
           </div>
         ) : null}

@@ -6,7 +6,11 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import type { DatabaseProduct, AuthUser } from "../types/database";
+import type {
+  DatabaseCategory,
+  DatabaseProduct,
+  AuthUser,
+} from "../types/database";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -145,4 +149,62 @@ export const updateProduct = async (
 
 export const deleteProduct = async (id: string) => {
   return supabase.from("products").delete().eq("id", id);
+};
+
+/**
+ * Categories - Database Queries
+ */
+export const getCategories = async (options?: {
+  activeOnly?: boolean;
+  includeInactive?: boolean;
+}) => {
+  let query = supabase
+    .from("categories")
+    .select("*")
+    .order("display_order", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (options?.activeOnly) {
+    query = query.eq("active", true);
+  }
+
+  if (options?.includeInactive === false) {
+    query = query.eq("active", true);
+  }
+
+  return query;
+};
+
+export const createCategory = async (
+  input: Omit<
+    DatabaseCategory,
+    "id" | "created_at" | "updated_at"
+  >
+) => {
+  return supabase.from("categories").insert(input).select().single();
+};
+
+export const updateCategory = async (
+  id: string,
+  updates: Partial<
+    Omit<DatabaseCategory, "id" | "created_at" | "updated_at">
+  >
+) => {
+  return supabase
+    .from("categories")
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
+};
+
+export const deactivateCategory = async (id: string) => {
+  return updateCategory(id, { active: false });
+};
+
+export const activateCategory = async (id: string) => {
+  return updateCategory(id, { active: true });
 };

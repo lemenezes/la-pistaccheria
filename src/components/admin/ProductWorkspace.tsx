@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { createProduct, getProducts, updateProduct } from "../../lib/supabase";
-import type { DatabaseProduct } from "../../types/database";
+import {
+  createProduct,
+  getCategories,
+  getProducts,
+  updateProduct,
+} from "../../lib/supabase";
+import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 import type { ProductFormValues } from "../../pages/admin/ProductForm";
 import AdminShell from "./AdminShell";
 import AdminSidebar from "./AdminSidebar";
 import ProductList from "./ProductList";
-import ProductListToolbar, { type ProductFilter } from "./ProductListToolbar";
+import ProductListToolbar, { type ProductFilter, type SortOption } from "./ProductListToolbar";
 import ProductPreviewPanel from "./ProductPreviewPanel";
 import ProductEditModal from "./ProductEditModal";
 
@@ -16,10 +21,15 @@ export default function ProductWorkspace() {
   const { user, logout } = useAuth();
 
   const [products, setProducts] = useState<DatabaseProduct[]>([]);
+  const [categories, setCategories] = useState<DatabaseCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ProductFilter>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("default");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,10 +66,35 @@ export default function ProductWorkspace() {
     };
   }, []);
 
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadCategories() {
+      const { data, error: queryError } = await getCategories({
+        activeOnly: true,
+      });
+
+      if (ignore) return;
+
+      if (queryError) {
+        setError(queryError.message || "Falha ao carregar categorias ativas.");
+        setCategories([]);
+      } else {
+        setCategories((data || []) as DatabaseCategory[]);
+      }
+    }
+
+    loadCategories();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return products.filter((product) => {
+    const filtered = products.filter((product) => {
       const matchesFilter =
         filter === "all" ||
         (filter === "active" && product.active) ||
@@ -67,7 +102,7 @@ export default function ProductWorkspace() {
         (filter === "featured" && product.featured);
 
       if (!matchesFilter) return false;
-
+      if (categoryFilter && product.category !== categoryFilter) return false;
       if (!normalizedQuery) return true;
 
       return (
@@ -76,7 +111,43 @@ export default function ProductWorkspace() {
         product.category.toLowerCase().includes(normalizedQuery)
       );
     });
-  }, [products, query, filter]);
+
+    return filtered.slice().sort((a, b) => {
+      switch (sortBy) {
+        case "default":
+        case "newest":
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case "name_asc":
+          return a.name.localeCompare(b.name, "pt-BR");
+        case "name_desc":
+          return b.name.localeCompare(a.name, "pt-BR");
+        case "price_desc":
+          return b.price - a.price;
+        case "price_asc":
+          return a.price - b.price;
+        case "display_order":
+          return a.display_order - b.display_order;
+        default:
+          return 0;
+      }
+    });
+  }, [products, query, filter, categoryFilter, sortBy]);
+
+  const categoryOptions = useMemo(() => {
+    const unique = new Set(products.map((p) => p.category).filter(Boolean));
+    return Array.from(unique).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [products]);
+
+  const totalCount = filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
+  const safePage = Math.min(page, totalPages);
+  const pageStart = (safePage - 1) * perPage;
+  const paginatedProducts = filteredProducts.slice(pageStart, pageStart + perPage);
+
+  // Reset para página 1 quando qualquer filtro muda
+  useEffect(() => {
+    setPage(1);
+  }, [query, filter, categoryFilter, sortBy, perPage]);
 
   const selectedProduct = useMemo(
     () =>
@@ -96,6 +167,7 @@ export default function ProductWorkspace() {
       name: values.name,
       slug: values.slug,
       category: values.category,
+      category_id: values.category_id || null,
       short_description: values.short_description,
       description: values.description,
       price: parseFloat(values.price) || 0,
@@ -217,28 +289,76 @@ export default function ProductWorkspace() {
               {/* Header + filtros */}
               <div className="bg-white rounded-b-none">
                 <ProductListToolbar
-                  query={query}
-                  filter={filter}
-                  onQueryChange={setQuery}
-                  onFilterChange={setFilter}
-                  onNewProduct={handleOpenCreate}
-                  onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
-                />
+                      query={query}
+                      filter={filter}
+                      sortBy={sortBy}
+                      categories={categoryOptions}
+                      categoryFilter={categoryFilter}
+                      onQueryChange={setQuery}
+                      onFilterChange={setFilter}
+                      onSortChange={setSortBy}
+                      onCategoryChange={setCategoryFilter}
+                      onNewProduct={handleOpenCreate}
+                      onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
+                    />
               </div>
               {/* Card da lista */}
               <div className="bg-white border border-[#E5E0D8] border-t-0 rounded-b-[8px] overflow-hidden flex-1">
                 <ProductList
-                  products={filteredProducts}
+                  products={paginatedProducts}
                   selectedProductId={selectedProductId}
                   isLoading={isLoading}
                   error={error}
                   onSelectProduct={handleSelectProduct}
                 />
-                {/* Rodapé da lista */}
-                {!isLoading && filteredProducts.length > 0 && (
-                  <p className="px-6 py-3 text-[11.5px] text-[#B0A9A0] border-t border-[#F0EDE8]">
-                    Mostrando {filteredProducts.length} de {products.length} produto{products.length !== 1 ? "s" : ""}
-                  </p>
+                {/* Rodapé de paginação */}
+                {!isLoading && totalCount > 0 && (
+                  <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-[#F0EDE8] bg-white">
+                    {totalCount <= perPage ? (
+                      <span className="text-[11.5px] text-[#9A9189]">
+                        {totalCount} produto{totalCount !== 1 ? "s" : ""} cadastrado{totalCount !== 1 ? "s" : ""}
+                      </span>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-[11.5px] text-[#9A9189]">
+                          <span>
+                            {totalCount} produto{totalCount !== 1 ? "s" : ""} cadastrado{totalCount !== 1 ? "s" : ""}
+                          </span>
+                          <select
+                            value={perPage}
+                            onChange={(e) => setPerPage(Number(e.target.value))}
+                            className="h-7 px-1.5 text-[11.5px] border border-[#E5E0D8] rounded-md bg-white text-[#5F5751] outline-none focus:border-[#9A9189] cursor-pointer"
+                          >
+                            <option value={10}>10 / pág.</option>
+                            <option value={25}>25 / pág.</option>
+                            <option value={50}>50 / pág.</option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            disabled={safePage <= 1}
+                            className="h-7 px-2.5 text-[12px] border border-[#E5E0D8] rounded-md text-[#5F5751] bg-white hover:bg-[#F4F2EE] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                          >
+                            ←
+                          </button>
+                          <span className="h-7 px-3 flex items-center text-[12px] font-medium text-[#1C1C1A] border border-[#D8D3CC] rounded-md bg-white">
+                            {safePage} / {totalPages}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={safePage >= totalPages}
+                            className="h-7 px-2.5 text-[12px] border border-[#E5E0D8] rounded-md text-[#5F5751] bg-white hover:bg-[#F4F2EE] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
+                          >
+                            →
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -289,6 +409,7 @@ export default function ProductWorkspace() {
           submitError={submitError}
           onSubmit={handleSubmit}
           onClose={handleCloseModal}
+          categories={categories}
         />
       )}
     </>

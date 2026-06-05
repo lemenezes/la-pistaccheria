@@ -1,14 +1,41 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { createProduct } from "../../lib/supabase";
+import { createProduct, getCategories } from "../../lib/supabase";
 import ProductForm, { type ProductFormValues } from "./ProductForm";
+import type { DatabaseCategory } from "../../types/database";
 
 export default function AdminProdutoNovo() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<DatabaseCategory[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadCategories() {
+      const { data, error: queryError } = await getCategories({
+        activeOnly: true,
+      });
+
+      if (ignore) return;
+
+      if (queryError) {
+        setError(queryError.message || "Erro ao carregar categorias ativas.");
+        setCategories([]);
+      } else {
+        setCategories((data || []) as DatabaseCategory[]);
+      }
+    }
+
+    loadCategories();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   async function handleSubmit(values: ProductFormValues) {
     setError(null);
@@ -24,6 +51,7 @@ export default function AdminProdutoNovo() {
         name: values.name,
         slug: values.slug,
         category: values.category,
+        category_id: values.category_id || null,
         short_description: values.short_description,
         description: values.description,
         price: parseFloat(values.price) || 0,
@@ -91,6 +119,7 @@ export default function AdminProdutoNovo() {
             submitLabel="Criar Produto"
             onCancel={() => navigate("/admin/produtos")}
             error={error}
+            categories={categories}
           />
         </div>
       </div>
