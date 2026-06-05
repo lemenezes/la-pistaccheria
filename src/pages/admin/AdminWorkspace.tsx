@@ -148,20 +148,20 @@ function SummaryCard({
   valueClassName?: string;
 }) {
   return (
-    <div className={`relative overflow-hidden rounded-[24px] border px-5 py-6 shadow-[0_22px_60px_rgba(95,87,81,0.08)] min-h-[176px] ${accentClassName}`}>
+    <div className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border px-4 py-4 md:px-5 md:py-6 shadow-[0_22px_60px_rgba(95,87,81,0.08)] md:min-h-[176px] ${accentClassName}`}>
       <div className="absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.72),rgba(255,255,255,0))]" />
-      <div className="flex h-full items-start gap-4">
-        <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] border shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] ${iconClassName}`}>
+      <div className="flex h-full items-start gap-3 md:gap-4">
+        <div className={`flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-[14px] md:rounded-[18px] border shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] ${iconClassName}`}>
           <DashboardIcon type={icon} />
         </div>
         <div className="min-w-0 self-stretch flex flex-col justify-between">
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#736A62]">{label}</p>
-            <p className={`mt-3 leading-none text-[#1C1C1A] ${valueClassName || "text-[3rem] md:text-[3.35rem]"}`}>{value}</p>
+            <p className="text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.08em] text-[#736A62]">{label}</p>
+            <p className={`mt-2 md:mt-3 leading-none text-[#1C1C1A] ${valueClassName || "text-[2.25rem] md:text-[3.35rem]"}`}>{value}</p>
           </div>
-          <div className="mt-4 space-y-1.5">
-            <p className="text-[12px] leading-relaxed text-[#5E5750]">{detail}</p>
-            {trend ? <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#82776E]">{trend}</p> : null}
+          <div className="mt-2 md:mt-4 space-y-1">
+            <p className="text-[11px] md:text-[12px] leading-relaxed text-[#5E5750]">{detail}</p>
+            {trend ? <p className="hidden md:block text-[11px] font-medium uppercase tracking-[0.08em] text-[#82776E]">{trend}</p> : null}
           </div>
         </div>
       </div>
@@ -309,7 +309,7 @@ export default function AdminWorkspace() {
       main={
         <div className="min-h-full bg-[#F4F2EE]">
           <div className="min-h-full bg-[radial-gradient(circle_at_top_right,rgba(205,189,160,0.22),transparent_28%),radial-gradient(circle_at_22%_0%,rgba(78,102,56,0.08),transparent_22%),linear-gradient(180deg,#F7F3ED_0%,#F2EEE8_100%)] px-4 py-5 md:px-6 md:py-6">
-            <div className="mx-auto flex w-full max-w-[1260px] flex-col gap-6">
+            <div className="mx-auto flex w-full max-w-[1260px] flex-col gap-4 md:gap-6">
               {/* Mobile header */}
               <div className="lg:hidden overflow-hidden rounded-[16px] border border-[#E6DFD6] bg-white shadow-[0_2px_12px_rgba(95,87,81,0.06)]">
                 <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-[#EEE8DF]">
@@ -347,14 +347,6 @@ export default function AdminWorkspace() {
                       ))}
                     </select>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/admin/produtos/novo")}
-                    className="flex items-center gap-1.5 h-9 px-3 text-[13px] font-medium text-white rounded-[8px] shrink-0 bg-[#2A3D20]"
-                  >
-                    <span className="text-[18px] leading-none font-light">+</span>
-                    Novo
-                  </button>
                 </div>
                 {error ? (
                   <div className="px-4 py-2.5 bg-[#FBF2F2] border-t border-[#E0C8C8] text-[12px] text-[#8A3A3A]">
@@ -415,12 +407,12 @@ export default function AdminWorkspace() {
               </section>
 
               {/* Summary cards — always visible */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
                 <SummaryCard
                   icon="products"
                   label="Total de produtos"
                   value={isLoading ? "..." : totalProducts}
-                  detail={isLoading ? "Carregando catalogo" : `${filteredProducts.length} cadastrados nos ${formatRelativePeriod(periodDays)}`}
+                  detail={isLoading ? "Carregando catalogo" : `${activeProducts} ativos · ${totalProducts - activeProducts} inativos`}
                   trend={isLoading ? undefined : formatGrowthLabel(filteredProducts.length, previousProductsInPeriod, "novo", "novos")}
                   accentClassName="border-[#DCE7D2] bg-[linear-gradient(180deg,rgba(241,247,236,0.98),rgba(252,249,243,0.98))]"
                   iconClassName="border-[#C9D9BB] bg-[#E6F0DE] text-[#315025]"
@@ -438,7 +430,7 @@ export default function AdminWorkspace() {
                   icon="categories"
                   label="Categorias ativas"
                   value={isLoading ? "..." : activeCategories}
-                  detail={isLoading ? "Carregando categorias" : `${newCategoriesInPeriod} criadas nos ${formatRelativePeriod(periodDays)}`}
+                  detail={isLoading ? "Carregando categorias" : `De ${categories.length} no total · ${categories.length - activeCategories} inativas`}
                   trend={isLoading ? undefined : formatGrowthLabel(newCategoriesInPeriod, previousCategoriesInPeriod, "nova", "novas")}
                   accentClassName="border-[#E7DEC9] bg-[linear-gradient(180deg,rgba(247,241,225,0.98),rgba(252,249,243,0.98))]"
                   iconClassName="border-[#E0D1AF] bg-[#F3E7C9] text-[#876923]"
@@ -458,11 +450,11 @@ export default function AdminWorkspace() {
                 <article className="overflow-hidden rounded-[26px] border border-[#E6DFD6] bg-white/90 shadow-[0_24px_70px_rgba(95,87,81,0.07)] backdrop-blur-sm">
                   <div className="flex flex-col gap-3 border-b border-[#EEE8DF] px-5 py-5 md:flex-row md:items-start md:justify-between md:px-6">
                     <div>
-                      <h2 className="text-[1.75rem] leading-none text-[#1C1C1A]" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                      <h2 className="text-[1.35rem] md:text-[1.75rem] leading-none text-[#1C1C1A]" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                         Produtos mais recentes
                       </h2>
                       <p className="mt-2 text-[13px] text-[#7A716A]">
-                        Ultimos 5 produtos publicados dentro do periodo selecionado.
+                        {filteredProducts.length === 0 ? `Nenhum produto criado nos ${formatRelativePeriod(periodDays)}.` : `${filteredProducts.length} produto${filteredProducts.length === 1 ? "" : "s"} criado${filteredProducts.length === 1 ? "" : "s"} nos ${formatRelativePeriod(periodDays)}.`}
                       </p>
                     </div>
                     <button
@@ -493,9 +485,9 @@ export default function AdminWorkspace() {
                             key={product.id}
                             type="button"
                             onClick={() => navigate(`/admin/produtos/${product.id}`)}
-                            className="grid w-full grid-cols-[72px_minmax(0,1.35fr)_minmax(110px,0.8fr)_minmax(90px,0.6fr)_minmax(100px,0.7fr)] items-center gap-3 rounded-[18px] border border-transparent bg-[#FCFAF7] px-3 py-3 text-left transition-all hover:border-[#E2D9CE] hover:bg-white"
+                            className="grid w-full grid-cols-[44px_minmax(0,1fr)_auto] md:grid-cols-[72px_minmax(0,1.35fr)_minmax(110px,0.8fr)_minmax(90px,0.6fr)_minmax(100px,0.7fr)] items-center gap-3 rounded-[18px] border border-transparent bg-[#FCFAF7] px-3 py-3 text-left transition-all hover:border-[#E2D9CE] hover:bg-white"
                           >
-                            <div className="h-[58px] w-[58px] overflow-hidden rounded-[14px] border border-[#E3DBD0] bg-[#EEE7DD]">
+                            <div className="h-[44px] w-[44px] md:h-[58px] md:w-[58px] overflow-hidden rounded-[12px] md:rounded-[14px] border border-[#E3DBD0] bg-[#EEE7DD]">
                               {product.image_url ? (
                                 <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
                               ) : (
@@ -505,17 +497,17 @@ export default function AdminWorkspace() {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate text-[15px] font-semibold text-[#1F1C18]">{product.name}</p>
+                              <p className="truncate text-[14px] md:text-[15px] font-semibold text-[#1F1C18]">{product.name}</p>
                               <p className="mt-1 truncate text-[12px] text-[#8A8179]">{product.category}</p>
                             </div>
-                            <p className="truncate text-[12px] text-[#6E655D]">{product.category}</p>
+                            <p className="hidden md:block truncate text-[12px] text-[#6E655D]">{product.category}</p>
                             <div>
                               <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${product.active ? "bg-[#ECF2E7] text-[#355029]" : "bg-[#F1E8E8] text-[#8A3A3A]"}`}>
                                 <span className={`h-1.5 w-1.5 rounded-full ${product.active ? "bg-[#355029]" : "bg-[#8A3A3A]"}`} />
                                 {product.active ? "Ativo" : "Inativo"}
                               </span>
                             </div>
-                            <p className="text-right text-[12px] text-[#7A716A]">{formatDate(product.created_at)}</p>
+                            <p className="hidden md:block text-right text-[12px] text-[#7A716A]">{formatDate(product.created_at)}</p>
                           </button>
                         ))}
                       </div>
@@ -538,7 +530,7 @@ export default function AdminWorkspace() {
                   <div className="flex flex-col gap-3 border-b border-[#EEE8DF] px-5 py-5 md:px-6">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h2 className="text-[1.75rem] leading-none text-[#1C1C1A]" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                        <h2 className="text-[1.35rem] md:text-[1.75rem] leading-none text-[#1C1C1A]" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                           Categorias
                         </h2>
                         <p className="mt-2 text-[13px] text-[#7A716A]">
@@ -604,9 +596,9 @@ export default function AdminWorkspace() {
                 </article>
               </section>
 
-              <section className="rounded-[26px] border border-[#E6DFD6] bg-white/90 px-5 py-5 shadow-[0_24px_70px_rgba(95,87,81,0.07)] md:px-6">
-                <div className="mb-4">
-                  <h2 className="text-[1.7rem] leading-none text-[#1C1C1A]" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+              <section className="rounded-[26px] border border-[#E6DFD6] bg-white/90 px-4 py-4 shadow-[0_24px_70px_rgba(95,87,81,0.07)] md:px-6 md:py-5">
+                <div className="mb-3 md:mb-4">
+                  <h2 className="text-[1.35rem] md:text-[1.7rem] leading-none text-[#1C1C1A]" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                     Atalhos rapidos
                   </h2>
                   <p className="mt-2 text-[13px] text-[#7A716A]">
@@ -614,7 +606,7 @@ export default function AdminWorkspace() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-5">
                   {[
                     {
                       label: "Novo produto",
