@@ -5,20 +5,108 @@ interface AdminSidebarProps {
   onClose?: () => void;
 }
 
-type NavItem = { label: string; icon: string; active?: boolean; disabled?: boolean };
+type NavItem = { label: string; iconType: string; active?: boolean; disabled?: boolean };
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", icon: "⊞" },
-  { label: "Produtos", icon: "◫", active: true },
-  { label: "Categorias", icon: "⊟", disabled: true },
-  { label: "Pedidos", icon: "☰", disabled: true },
-  { label: "Depoimentos", icon: "◻", disabled: true },
-  { label: "Configurações", icon: "⚙", disabled: true },
-  { label: "Usuários", icon: "○", disabled: true },
-  { label: "Mídia", icon: "▣", disabled: true },
-  { label: "Cupons", icon: "◈", disabled: true },
-  { label: "Relatórios", icon: "▦", disabled: true },
+  { label: "Dashboard", iconType: "home" },
+  { label: "Produtos", iconType: "box", active: true },
+  { label: "Categorias", iconType: "grid", disabled: true },
+  { label: "Pedidos", iconType: "clipboard", disabled: true },
+  { label: "Depoimentos", iconType: "message", disabled: true },
+  { label: "Configurações", iconType: "settings", disabled: true },
+  { label: "Usuários", iconType: "users", disabled: true },
+  { label: "Mídia", iconType: "image", disabled: true },
+  { label: "Cupons", iconType: "ticket", disabled: true },
+  { label: "Relatórios", iconType: "chart", disabled: true },
 ];
+
+// Ícones SVG premium com stroke 1.5-2px
+function IconSVG({ type, className }: { type: string; className?: string }) {
+  switch (type) {
+    case "home":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <path d="M9 21v-8h6v8" />
+        </svg>
+      );
+    case "box":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <path d="M6 4h12l2 3v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7l2-3z" />
+          <path d="M14 8l-4-3M6 7l6 5 6-5" />
+        </svg>
+      );
+    case "grid":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+      );
+    case "clipboard":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <path d="M9 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2" />
+          <path d="M9 3a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" />
+          <path d="M9 11h6M9 15h6" />
+        </svg>
+      );
+    case "message":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      );
+    case "settings":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24" />
+        </svg>
+      );
+    case "users":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      );
+    case "image":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <path d="M21 15l-5-5L5 21" />
+        </svg>
+      );
+    case "ticket":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+          <circle cx="12" cy="12" r="1" />
+          <path d="M9 9h6v6H9z" />
+        </svg>
+      );
+    case "chart":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <path d="M3 3v18a2 2 0 0 0 2 2h16" />
+          <path d="M7 16v-5m5 5v-8m5 8v-3" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+          <path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <path d="M9 21v-8h6v8" />
+        </svg>
+      );
+  }
+}
 
 export default function AdminSidebar({
   userEmail,
@@ -28,15 +116,15 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   return (
     <div className="h-full flex flex-col py-5">
-      <div className="px-5 mb-6 flex items-start justify-between">
+      <div className="px-5 mb-8 flex items-start justify-between">
         <div>
           <h1
-            className="text-[1.4rem] font-normal text-white leading-[1.1]"
+            className="text-[1.55rem] font-normal text-white leading-[1.05]"
             style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
           >
             La Pistaccheria
           </h1>
-          <p className="text-[9px] tracking-[0.18em] uppercase text-white/45 mt-0.5">
+          <p className="text-[8.5px] tracking-[0.18em] uppercase text-white/50 mt-1">
             Confeitaria Italiana
           </p>
         </div>
@@ -53,50 +141,54 @@ export default function AdminSidebar({
         )}
       </div>
 
-      <nav aria-label="Admin navigation" className="flex-1 space-y-0.5 px-2">
+      <nav aria-label="Admin navigation" className="flex-1 space-y-1.5 px-2">
         {navItems.map((item) => (
           <button
             key={item.label}
             type="button"
             disabled={item.disabled && !item.active}
-            className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5 text-[11px] tracking-[0.12em] transition-colors rounded-[3px] ${
+            className={`w-full text-left flex items-center gap-3 px-3.5 py-3 text-sm tracking-[0.02em] transition-all duration-200 rounded-md ${
               item.active
-                ? "bg-white/15 text-white"
+                ? "bg-gradient-to-r from-white/20 to-white/10 text-white shadow-[inset_0_1px_3px_rgba(255,255,255,0.2)] border border-white/15"
                 : item.disabled
                   ? "text-white/30 cursor-default"
-                  : "text-white/60 hover:bg-white/10 hover:text-white"
+                  : "text-white/75 hover:text-white hover:bg-white/10"
             }`}
           >
-            <span className="text-[14px] w-4 text-center opacity-70">{item.icon}</span>
-            {item.label}
+            <div className="w-5 h-5 flex items-center justify-center text-white/90 flex-shrink-0">
+              <IconSVG type={item.iconType} className="w-full h-full" />
+            </div>
+            <span className="font-medium">{item.label}</span>
           </button>
         ))}
       </nav>
 
-      <div className="px-3 pt-3 pb-4 border-t border-white/10">
-        <div className="flex items-center gap-2.5 px-2 py-2 rounded-[4px] hover:bg-white/5 transition-colors mb-1">
-          {/* Avatar com inicial */}
+      <div className="px-3 pt-4 pb-5 border-t border-white/15">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/8 transition-colors mb-2">
+          {/* Avatar com inicial - aumentado */}
           <div
-            className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[11px] font-semibold uppercase"
-            style={{ background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.9)" }}
+            className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold uppercase flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.2)", color: "#ffffff" }}
           >
             {userEmail ? userEmail[0].toUpperCase() : "A"}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] text-white/80 truncate leading-tight">
+            <p className="text-sm font-semibold text-white truncate leading-snug">
               {userEmail ? userEmail.split("@")[0] : "Admin"}
             </p>
-            <p className="text-[9px] text-white/35 tracking-[0.08em] uppercase mt-0.5">Administrador</p>
+            <p className="text-[8px] text-white/60 tracking-[0.05em] uppercase mt-0.5 font-medium">Administrador</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onLogout}
           disabled={isLoggingOut}
-          className="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] tracking-[0.1em] text-white/45 hover:text-white/80 hover:bg-white/8 disabled:opacity-40 transition-colors rounded-[3px]"
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 text-sm tracking-[0.02em] text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-40 transition-colors rounded-md"
         >
-          <span className="text-[13px] w-4 text-center">→</span>
-          {isLoggingOut ? "Saindo..." : "Sair"}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+          </svg>
+          <span className="font-medium">{isLoggingOut ? "Saindo..." : "Sair"}</span>
         </button>
       </div>
     </div>
