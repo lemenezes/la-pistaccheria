@@ -90,22 +90,55 @@ export const getProductBySlug = async (slug: string) => {
     .single();
 };
 
+// Returns IDs of active categories visible on the public site.
+// The anon RLS policy on `categories` already restricts to active=true,
+// so this naturally returns only active IDs when called without auth.
+const getActiveCategoryIds = async (): Promise<string[]> => {
+  const { data } = await supabase.from("categories").select("id");
+  return (data ?? []).map((c) => c.id);
+};
+
 export const getPublicProducts = async () => {
-  return supabase
+  const activeCategoryIds = await getActiveCategoryIds();
+
+  let query = supabase
     .from("products")
     .select("*")
     .eq("active", true)
     .order("display_order", { ascending: true })
     .order("created_at", { ascending: false });
+
+  if (activeCategoryIds.length > 0) {
+    // Show products with no category link OR linked to an active category
+    query = query.or(
+      `category_id.is.null,category_id.in.(${activeCategoryIds.join(",")})`
+    );
+  } else {
+    // No active categories at all: only show uncategorised products
+    query = query.is("category_id", null);
+  }
+
+  return query;
 };
 
 export const getPublicProductBySlug = async (slug: string) => {
-  return supabase
+  const activeCategoryIds = await getActiveCategoryIds();
+
+  let query = supabase
     .from("products")
     .select("*")
     .eq("active", true)
-    .eq("slug", slug)
-    .single();
+    .eq("slug", slug);
+
+  if (activeCategoryIds.length > 0) {
+    query = query.or(
+      `category_id.is.null,category_id.in.(${activeCategoryIds.join(",")})`
+    );
+  } else {
+    query = query.is("category_id", null);
+  }
+
+  return query.single();
 };
 
 export const getProductById = async (id: string) => {
@@ -190,15 +223,28 @@ export const updateCategory = async (
     Omit<DatabaseCategory, "id" | "created_at" | "updated_at">
   >
 ) => {
-  return supabase
+  const { data, error } = await supabase
     .from("categories")
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .select()
-    .single();
+    .select("id")
+    .maybeSingle();
+
+  if (error) return { data: null, error };
+
+  if (!data) {
+    return {
+      data: null,
+      error: new Error(
+        "Sem permissão para atualizar esta categoria. Verifique se seu usuário está na allowlist de administradores."
+      ),
+    };
+  }
+
+  return { data, error: null };
 };
 
 export const deactivateCategory = async (id: string) => {

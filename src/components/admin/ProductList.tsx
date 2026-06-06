@@ -1,8 +1,9 @@
-import type { DatabaseProduct } from "../../types/database";
+import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 import ProductListItem from "./ProductListItem";
 
 interface ProductListProps {
   products: DatabaseProduct[];
+  categories: DatabaseCategory[];
   selectedProductId: string | null;
   isLoading: boolean;
   error: string | null;
@@ -11,6 +12,7 @@ interface ProductListProps {
 
 export default function ProductList({
   products,
+  categories,
   selectedProductId,
   isLoading,
   error,
@@ -54,6 +56,7 @@ export default function ProductList({
         <ProductListItem
           key={product.id}
           product={product}
+          categories={categories}
           isSelected={selectedProductId === product.id}
           onSelect={() => onSelectProduct(product.id)}
         />

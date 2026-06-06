@@ -690,9 +690,10 @@ export default function AdminCategorias() {
                 </section>
 
                 <section className="overflow-hidden rounded-[26px] border border-[#E6DFD6] bg-white/90 shadow-[0_24px_70px_rgba(95,87,81,0.07)] backdrop-blur-sm">
-                  <div className="border-b border-[#EEE8DF] px-5 py-4 md:px-6 md:py-5">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                      <div>
+                  <div className="border-b border-[#EEE8DF] px-5 py-3 md:px-6 md:py-5">
+                    <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+                      {/* Título — desktop apenas */}
+                      <div className="hidden lg:block">
                         <h2
                           className="text-[1.7rem] leading-none text-[#1C1C1A]"
                           style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
@@ -703,9 +704,13 @@ export default function AdminCategorias() {
                           {filteredCategories.length} resultado{filteredCategories.length !== 1 ? "s" : ""} exibido{filteredCategories.length !== 1 ? "s" : ""}
                         </p>
                       </div>
+                      {/* Contagem — mobile apenas */}
+                      <p className="lg:hidden text-[12px] text-[#9A9189]">
+                        {filteredCategories.length} categoria{filteredCategories.length !== 1 ? "s" : ""} encontrada{filteredCategories.length !== 1 ? "s" : ""}
+                      </p>
 
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <label className="flex h-11 min-w-[250px] items-center gap-2 rounded-[12px] border border-[#E1D9CE] bg-white px-3 text-[#5F5751]">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <label className="flex h-9 lg:h-11 items-center gap-2 rounded-[10px] lg:rounded-[12px] border border-[#E1D9CE] bg-white px-3 text-[#5F5751] lg:min-w-[250px]">
                           <DashboardIcon type="search" />
                           <input
                             type="text"
@@ -716,7 +721,7 @@ export default function AdminCategorias() {
                           />
                         </label>
 
-                        <div className="inline-flex h-11 rounded-[12px] border border-[#DED5CA] bg-[#F9F6F1] p-1">
+                        <div className="inline-flex h-9 lg:h-11 rounded-[10px] lg:rounded-[12px] border border-[#DED5CA] bg-[#F9F6F1] p-1">
                           {([
                             { id: "all", label: "Todos" },
                             { id: "active", label: "Ativas" },
@@ -759,41 +764,71 @@ export default function AdminCategorias() {
                           return (
                             <article
                               key={category.id}
-                              className="rounded-[18px] border border-[#EFE7DB] bg-[#FFFDFA] px-4 py-4"
+                              className="rounded-[18px] border border-[#EFE7DB] bg-[#FFFDFA] px-4 py-3.5 lg:py-4"
                             >
-                              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.95fr)_minmax(120px,0.6fr)_minmax(120px,0.6fr)_minmax(80px,0.45fr)_minmax(0,1fr)] lg:items-center">
+                              {/* Mobile card */}
+                              <div className="lg:hidden space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="line-clamp-2 text-[14px] font-semibold text-[#1F1C18] leading-snug">
+                                    {category.name}
+                                  </p>
+                                  <span className={`shrink-0 inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${category.active ? "bg-[#ECF2E7] text-[#355029]" : "bg-[#EFE9E0] text-[#8B7760]"}`}>
+                                    {category.active ? "Ativa" : "Inativa"}
+                                  </span>
+                                </div>
+                                <p className="truncate text-[11px] text-[#8A8179]">{category.slug}</p>
+                                <p className="text-[11px] text-[#5F5751]">
+                                  {linkedProducts} produto{linkedProducts !== 1 ? "s" : ""} vinculado{linkedProducts !== 1 ? "s" : ""}
+                                </p>
+                                <div className="flex gap-2 pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => openEditModal(category)}
+                                    className="h-7 px-3 border border-[#D5CFC8] text-[10px] tracking-[0.1em] uppercase text-[#5F5751] rounded-[6px] hover:text-[#1C1C1A]"
+                                  >
+                                    Editar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={ui.isSubmitting}
+                                    onClick={() => handleToggleActive(category)}
+                                    className="h-7 px-3 border border-[#D5CFC8] text-[10px] tracking-[0.1em] uppercase text-[#5F5751] rounded-[6px] hover:text-[#1C1C1A] disabled:opacity-60"
+                                  >
+                                    {category.active ? "Desativar" : "Ativar"}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Desktop layout */}
+                              <div className="hidden lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.95fr)_minmax(120px,0.6fr)_minmax(120px,0.6fr)_minmax(80px,0.45fr)_minmax(0,1fr)] lg:items-center">
                                 <div className="min-w-0">
                                   <p className="truncate text-[15px] font-semibold text-[#1F1C18]">
                                     {category.name}
                                   </p>
-                                  <p className="mt-1 truncate text-[12px] text-[#8A8179]">
-                                    {category.description || "Sem descricao editorial cadastrada."}
-                                  </p>
+                                  {category.description ? (
+                                    <p className="mt-1 truncate text-[12px] text-[#8A8179]">{category.description}</p>
+                                  ) : null}
                                 </div>
 
                                 <div className="min-w-0">
-                                  <p className="text-[10px] uppercase tracking-[0.1em] text-[#A39A90] lg:hidden">Slug</p>
                                   <p className="truncate text-[12px] text-[#5F5751]">{category.slug}</p>
                                 </div>
 
                                 <div>
-                                  <p className="text-[10px] uppercase tracking-[0.1em] text-[#A39A90] lg:hidden">Produtos vinculados</p>
                                   <p className="text-[12px] text-[#5F5751]">{linkedProducts}</p>
                                 </div>
 
                                 <div>
-                                  <p className="text-[10px] uppercase tracking-[0.1em] text-[#A39A90] lg:hidden">Status</p>
                                   <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${category.active ? "bg-[#ECF2E7] text-[#355029]" : "bg-[#EFE9E0] text-[#8B7760]"}`}>
                                     {category.active ? "Ativa" : "Inativa"}
                                   </span>
                                 </div>
 
                                 <div>
-                                  <p className="text-[10px] uppercase tracking-[0.1em] text-[#A39A90] lg:hidden">Ordem</p>
                                   <p className="text-[12px] text-[#5F5751]">{category.display_order}</p>
                                 </div>
 
-                                <div className="flex flex-wrap gap-2 lg:justify-end">
+                                <div className="flex flex-wrap gap-2 justify-end">
                                   <button
                                     type="button"
                                     onClick={() => openEditModal(category)}

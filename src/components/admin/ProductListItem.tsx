@@ -1,17 +1,23 @@
 import { formatPrice } from "../../lib/formatPrice";
-import type { DatabaseProduct } from "../../types/database";
+import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 
 interface ProductListItemProps {
   product: DatabaseProduct;
+  categories: DatabaseCategory[];
   isSelected: boolean;
   onSelect: () => void;
 }
 
 export default function ProductListItem({
   product,
+  categories,
   isSelected,
   onSelect,
 }: ProductListItemProps) {
+  const linkedCategory = product.category_id
+    ? categories.find((c) => c.id === product.category_id)
+    : null;
+  const isLinkedCategoryInactive = product.active && linkedCategory?.active === false;
   return (
     <button
       type="button"
@@ -31,7 +37,12 @@ export default function ProductListItem({
       {/* Mobile: nome + categoria + preço (col 2) */}
       <div className="md:hidden min-w-0">
         <p className="line-clamp-2 text-[14px] font-semibold text-[#1C1C1A] leading-snug">{product.name}</p>
-        <p className="mt-0.5 truncate text-[11px] text-[#7A716A]">{product.category}</p>
+        <p className="mt-0.5 truncate text-[11px] text-[#7A716A]">
+          {product.category}
+          {isLinkedCategoryInactive && (
+            <span className="ml-1 text-[#9A5A20] font-medium">· Inativa</span>
+          )}
+        </p>
         <p className="mt-0.5 text-[12px] font-medium text-[#1C1C1A]">{formatPrice(product.price)}</p>
       </div>
 
@@ -51,7 +62,12 @@ export default function ProductListItem({
       </div>
 
       {/* Desktop: categoria (col 2) */}
-      <p className="hidden md:block text-[12px] text-[#7A716A] truncate pr-4">{product.category}</p>
+      <div className="hidden md:block min-w-0 pr-4">
+        <p className="text-[12px] text-[#7A716A] truncate">{product.category}</p>
+        {isLinkedCategoryInactive && (
+          <p className="text-[10px] text-[#9A5A20] font-medium mt-0.5">Categoria inativa</p>
+        )}
+      </div>
 
       {/* Desktop: preço (col 3) */}
       <p className="hidden md:block text-[13px] text-[#1C1C1A] pr-4">{formatPrice(product.price)}</p>

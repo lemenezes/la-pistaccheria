@@ -216,7 +216,7 @@ export default function ProductForm({
             </option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
-                {category.name}
+                {category.name}{!category.active ? " (inativa)" : ""}
               </option>
             ))}
             {legacyCategoryOption && (
@@ -228,6 +228,11 @@ export default function ProductForm({
           {legacyCategoryOption && !form.category_id && (
             <p className="text-[10px] text-[#8A3A3A] mt-1">
               Categoria legada sem correspondencia ativa. Salve para manter compatibilidade temporaria.
+            </p>
+          )}
+          {form.category_id && categories.find((c) => c.id === form.category_id)?.active === false && (
+            <p className="text-[10px] text-[#9A5A20] mt-1">
+              Esta categoria está inativa. Este produto não aparece no site público.
             </p>
           )}
         </div>

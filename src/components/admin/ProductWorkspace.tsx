@@ -70,9 +70,9 @@ export default function ProductWorkspace() {
     let ignore = false;
 
     async function loadCategories() {
-      const { data, error: queryError } = await getCategories({
-        activeOnly: true,
-      });
+      // Load all categories (including inactive) so the product list
+      // can flag products linked to inactive categories.
+      const { data, error: queryError } = await getCategories();
 
       if (ignore) return;
 
@@ -306,6 +306,7 @@ export default function ProductWorkspace() {
               <div className="bg-white overflow-hidden flex-1 rounded-[16px] md:rounded-none md:rounded-b-[8px] border border-[#E6DFD6] md:border-[#E5E0D8] md:border-t-0">
                 <ProductList
                   products={paginatedProducts}
+                  categories={categories}
                   selectedProductId={selectedProductId}
                   isLoading={isLoading}
                   error={error}
