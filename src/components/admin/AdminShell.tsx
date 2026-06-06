@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Toaster } from "sonner";
 
 interface AdminShellProps {
   sidebar: ReactNode;
@@ -17,7 +18,7 @@ export default function AdminShell({
 }: AdminShellProps) {
   return (
     <div className="min-h-screen flex bg-[#F4F2EE]">
-      {/* Overlay backdrop (mobile/tablet) */}
+      <Toaster richColors position="bottom-right" closeButton />
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"

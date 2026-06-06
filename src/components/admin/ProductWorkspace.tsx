@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuth } from "../../context/AuthContext";
 import {
   createProduct,
@@ -33,7 +34,6 @@ export default function ProductWorkspace() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileProductOpen, setMobileProductOpen] = useState(false);
@@ -182,7 +182,6 @@ export default function ProductWorkspace() {
   }
 
   async function handleSubmit(values: ProductFormValues) {
-    setSubmitError(null);
     setIsSubmitting(true);
 
     try {
@@ -196,7 +195,7 @@ export default function ProductWorkspace() {
         });
 
         if (apiError || !data) {
-          setSubmitError(apiError?.message || "Erro ao criar produto.");
+          toast.error(apiError?.message || "Erro ao criar produto.");
           return;
         }
 
@@ -204,18 +203,19 @@ export default function ProductWorkspace() {
         setProducts((prev) => [created, ...prev]);
         setSelectedProductId(created.id);
         setModalMode(null);
+        toast.success("Produto criado com sucesso.");
         return;
       }
 
       if (!selectedProductId) {
-        setSubmitError("Selecione um produto para editar.");
+        toast.error("Selecione um produto para editar.");
         return;
       }
 
       const { data, error: apiError } = await updateProduct(selectedProductId, payload);
 
       if (apiError || !data) {
-        setSubmitError(apiError?.message || "Erro ao atualizar produto.");
+        toast.error(apiError?.message || "Erro ao atualizar produto.");
         return;
       }
 
@@ -225,32 +225,29 @@ export default function ProductWorkspace() {
       );
       setSelectedProductId(updated.id);
       setModalMode(null);
+      toast.success("Produto atualizado com sucesso.");
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Erro inesperado.");
+      toast.error(err instanceof Error ? err.message : "Erro inesperado.");
     } finally {
       setIsSubmitting(false);
     }
   }
 
   function handleOpenCreate() {
-    setSubmitError(null);
     setSelectedProductId(null);
     setModalMode("create");
   }
 
   function handleSelectProduct(id: string) {
-    setSubmitError(null);
     setSelectedProductId(id);
     setMobileProductOpen(true);
   }
 
   function handleOpenEdit() {
-    setSubmitError(null);
     setModalMode("edit");
   }
 
   function handleCloseModal() {
-    setSubmitError(null);
     setModalMode(null);
   }
 
@@ -264,7 +261,7 @@ export default function ProductWorkspace() {
       await logout();
       navigate("/admin/login", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao sair.");
+      toast.error(err instanceof Error ? err.message : "Erro ao sair.");
     } finally {
       setIsLoggingOut(false);
     }
@@ -407,7 +404,7 @@ export default function ProductWorkspace() {
           mode={modalMode}
           product={selectedProduct}
           isSubmitting={isSubmitting}
-          submitError={submitError}
+          submitError={null}
           onSubmit={handleSubmit}
           onClose={handleCloseModal}
           categories={categories}

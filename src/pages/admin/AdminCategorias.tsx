@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import AdminShell from "../../components/admin/AdminShell";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import { useAuth } from "../../context/AuthContext";
@@ -29,7 +30,6 @@ type UiState = {
   isSubmitting: boolean;
   error: string | null;
   formError: string | null;
-  successMessage: string | null;
 };
 
 type UiAction =
@@ -38,15 +38,13 @@ type UiAction =
   | { type: "submittingStart" }
   | { type: "submittingDone" }
   | { type: "setError"; payload: string | null }
-  | { type: "setFormError"; payload: string | null }
-  | { type: "setSuccess"; payload: string | null };
+  | { type: "setFormError"; payload: string | null };
 
 const initialUiState: UiState = {
   isLoading: true,
   isSubmitting: false,
   error: null,
   formError: null,
-  successMessage: null,
 };
 
 function uiReducer(state: UiState, action: UiAction): UiState {
@@ -63,8 +61,6 @@ function uiReducer(state: UiState, action: UiAction): UiState {
       return { ...state, error: action.payload };
     case "setFormError":
       return { ...state, formError: action.payload };
-    case "setSuccess":
-      return { ...state, successMessage: action.payload };
     default:
       return state;
   }
@@ -400,26 +396,13 @@ export default function AdminCategorias() {
     };
   }, [fetchData]);
 
-  useEffect(() => {
-    if (!ui.successMessage) return;
-
-    const timeout = window.setTimeout(() => {
-      dispatch({ type: "setSuccess", payload: null });
-    }, 2600);
-
-    return () => window.clearTimeout(timeout);
-  }, [ui.successMessage]);
-
   async function handleLogout() {
     setIsLoggingOut(true);
     try {
       await logout();
       navigate("/admin/login", { replace: true });
     } catch (err) {
-      dispatch({
-        type: "setError",
-        payload: err instanceof Error ? err.message : "Erro ao sair.",
-      });
+      toast.error(err instanceof Error ? err.message : "Erro ao sair.");
     } finally {
       setIsLoggingOut(false);
     }
@@ -482,7 +465,7 @@ export default function AdminCategorias() {
         return;
       }
 
-      dispatch({ type: "setSuccess", payload: "Categoria criada com sucesso." });
+      toast.success("Categoria criada com sucesso.");
       setIsModalOpen(false);
       await loadData();
       dispatch({ type: "submittingDone" });
@@ -509,7 +492,7 @@ export default function AdminCategorias() {
       return;
     }
 
-    dispatch({ type: "setSuccess", payload: "Categoria atualizada com sucesso." });
+    toast.success("Categoria atualizada com sucesso.");
     setIsModalOpen(false);
     await loadData();
     dispatch({ type: "submittingDone" });
@@ -523,21 +506,16 @@ export default function AdminCategorias() {
       : await activateCategory(category.id);
 
     if (result.error) {
-      dispatch({
-        type: "setError",
-        payload: result.error.message || "Erro ao atualizar status da categoria.",
-      });
+      toast.error(result.error.message || "Erro ao atualizar status da categoria.");
       dispatch({ type: "submittingDone" });
       return;
     }
 
-    dispatch({
-      type: "setSuccess",
-      payload:
+    toast.success(
       category.active
-        ? "Categoria desativada com sucesso."
-        : "Categoria ativada com sucesso.",
-    });
+        ? "Categoria desativada."
+        : "Categoria reativada."
+    );
     await loadData();
     dispatch({ type: "submittingDone" });
   }
@@ -639,11 +617,6 @@ export default function AdminCategorias() {
                       {ui.error}
                     </div>
                   ) : null}
-                  {ui.successMessage ? (
-                    <div className="px-4 py-2.5 bg-[#EEF5E9] border-b border-[#CFE0C6] text-[12px] text-[#385329]">
-                      {ui.successMessage}
-                    </div>
-                  ) : null}
                 </div>
 
                 {/* Desktop header */}
@@ -680,11 +653,6 @@ export default function AdminCategorias() {
                   {ui.error ? (
                     <div className="mt-5 rounded-[12px] border border-[#E0C8C8] bg-[#FBF2F2] px-4 py-3 text-[13px] text-[#8A3A3A]">
                       {ui.error}
-                    </div>
-                  ) : null}
-                  {ui.successMessage ? (
-                    <div className="mt-5 rounded-[12px] border border-[#CFE0C6] bg-[#EEF5E9] px-4 py-3 text-[13px] text-[#385329]">
-                      {ui.successMessage}
                     </div>
                   ) : null}
                 </section>

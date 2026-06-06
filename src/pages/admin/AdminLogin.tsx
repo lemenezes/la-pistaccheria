@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuth } from "../../context/AuthContext";
 
 function PistachioMark() {
@@ -70,7 +71,6 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const redirectTo =
@@ -83,7 +83,6 @@ export default function AdminLogin() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
     setIsSubmitting(true);
     try {
       await login(email, password);
@@ -92,7 +91,7 @@ export default function AdminLogin() {
       const message = err instanceof Error && err.message
         ? "E-mail ou senha incorretos."
         : "Não foi possível realizar o acesso. Tente novamente.";
-      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -191,13 +190,6 @@ export default function AdminLogin() {
             />
             <span className="text-[14px] text-warm-gray">Lembrar-me</span>
           </label>
-
-          {/* Erro */}
-          {error && (
-            <p className="text-[12px] text-[#8A3A3A] leading-relaxed bg-[#FBF2F2] border border-[#E8CACA] rounded-[8px] px-4 py-3">
-              {error}
-            </p>
-          )}
 
           {/* Botão */}
           <button
