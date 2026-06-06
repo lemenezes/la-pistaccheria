@@ -1,0 +1,13 @@
+name = "la-pistaccheria-r2-upload-worker"
+main = "src/index.ts"
+compatibility_date = "2026-06-06"
+
+[[r2_buckets]]
+bucket_name = "media-assets"
+binding = "MEDIA_ASSETS_BUCKET"
+
+[vars]
+SUPABASE_URL = ""
+SUPABASE_ANON_KEY = ""
+SUPABASE_SERVICE_ROLE_KEY = ""
+MEDIA_CDN_BASE_URL = ""

@@ -1,0 +1,16 @@
+{
+  "name": "la-pistaccheria-r2-upload-worker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "deploy:dry-run": "wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250606.0",
+    "wrangler": "^4.23.0"
+  }
+}
