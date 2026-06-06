@@ -13,7 +13,10 @@ import type { ProductFormValues } from "../../pages/admin/ProductForm";
 import AdminShell from "./AdminShell";
 import AdminSidebar from "./AdminSidebar";
 import ProductList from "./ProductList";
-import ProductListToolbar, { type ProductFilter, type SortOption } from "./ProductListToolbar";
+import ProductListToolbar, {
+  type ProductFilter,
+  type SortOption,
+} from "./ProductListToolbar";
 import ProductPreviewPanel from "./ProductPreviewPanel";
 import ProductEditModal from "./ProductEditModal";
 
@@ -28,7 +31,7 @@ export default function ProductWorkspace() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ProductFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("default");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -95,14 +98,23 @@ export default function ProductWorkspace() {
     const normalizedQuery = query.trim().toLowerCase();
 
     const filtered = products.filter((product) => {
+      const linkedCategory = product.category_id
+        ? categories.find((category) => category.id === product.category_id)
+        : null;
+      const isHiddenByInactiveCategory =
+        product.active &&
+        !!linkedCategory &&
+        linkedCategory.active === false;
+
       const matchesFilter =
         filter === "all" ||
         (filter === "active" && product.active) ||
         (filter === "inactive" && !product.active) ||
-        (filter === "featured" && product.featured);
+        (filter === "featured" && product.featured) ||
+        (filter === "hidden" && isHiddenByInactiveCategory);
 
       if (!matchesFilter) return false;
-      if (categoryFilter && product.category !== categoryFilter) return false;
+      if (categoryFilters.length > 0 && !categoryFilters.includes(product.category)) return false;
       if (!normalizedQuery) return true;
 
       return (
@@ -131,12 +143,7 @@ export default function ProductWorkspace() {
           return 0;
       }
     });
-  }, [products, query, filter, categoryFilter, sortBy]);
-
-  const categoryOptions = useMemo(() => {
-    const unique = new Set(products.map((p) => p.category).filter(Boolean));
-    return Array.from(unique).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [products]);
+  }, [products, categories, query, filter, categoryFilters, sortBy]);
 
   const totalCount = filteredProducts.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
@@ -147,7 +154,7 @@ export default function ProductWorkspace() {
   // Reset para página 1 quando qualquer filtro muda
   useEffect(() => {
     setPage(1);
-  }, [query, filter, categoryFilter, sortBy, perPage]);
+  }, [query, filter, categoryFilters, sortBy, perPage]);
 
   const selectedProduct = useMemo(
     () =>
@@ -284,17 +291,17 @@ export default function ProductWorkspace() {
           <div className="min-h-full flex flex-col bg-[#F4F2EE]">
             <div className="px-4 md:px-6 pt-4 md:pt-0 pb-6 flex-1 flex flex-col gap-4 md:gap-0">
               {/* Header + filtros */}
-              <div className="overflow-hidden rounded-[16px] md:rounded-none border border-[#E6DFD6] md:border-0 bg-white shadow-[0_2px_12px_rgba(95,87,81,0.06)] md:shadow-none">
+              <div className="overflow-visible rounded-[16px] md:rounded-none border border-[#E6DFD6] md:border-0 bg-white shadow-[0_2px_12px_rgba(95,87,81,0.06)] md:shadow-none">
                 <ProductListToolbar
                       query={query}
                       filter={filter}
                       sortBy={sortBy}
-                      categories={categoryOptions}
-                      categoryFilter={categoryFilter}
+                      categories={categories}
+                      categoryFilters={categoryFilters}
                       onQueryChange={setQuery}
                       onFilterChange={setFilter}
                       onSortChange={setSortBy}
-                      onCategoryChange={setCategoryFilter}
+                      onCategoryChange={setCategoryFilters}
                       onNewProduct={handleOpenCreate}
                       onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
                     />
