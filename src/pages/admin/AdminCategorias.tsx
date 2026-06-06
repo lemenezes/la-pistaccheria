@@ -678,18 +678,18 @@ export default function AdminCategorias() {
                       </p>
 
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <label className="flex h-9 lg:h-11 items-center gap-2 rounded-[10px] lg:rounded-[12px] border border-[#E1D9CE] bg-white px-3 text-[#5F5751] lg:min-w-[250px]">
+                        <label className="flex h-9 items-center gap-2 rounded-md border border-[#E5E0D8] bg-white px-3 text-[#5F5751] lg:min-w-[250px]">
                           <DashboardIcon type="search" />
                           <input
                             type="text"
                             value={query}
                             onChange={(event) => setQuery(event.target.value)}
                             placeholder="Buscar por nome ou slug"
-                            className="h-full w-full bg-transparent text-[13px] outline-none placeholder:text-[#A09890]"
+                            className="h-full w-full bg-transparent text-[13px] text-[#1C1C1A] outline-none placeholder:text-[#B0A99F]"
                           />
                         </label>
 
-                        <div className="inline-flex h-9 lg:h-11 rounded-[10px] lg:rounded-[12px] border border-[#DED5CA] bg-[#F9F6F1] p-1">
+                        <div className="inline-flex h-9 rounded-md border border-[#E5E0D8] bg-[#F9F7F4] p-1">
                           {([
                             { id: "all", label: "Todos" },
                             { id: "active", label: "Ativas" },
@@ -699,10 +699,10 @@ export default function AdminCategorias() {
                               key={filter.id}
                               type="button"
                               onClick={() => setStatusFilter(filter.id)}
-                              className={`px-3 text-[11px] font-medium uppercase tracking-[0.08em] rounded-[9px] transition-colors ${
+                              className={`h-7 px-3.5 rounded-[6px] text-[12.5px] font-medium transition-colors ${
                                 statusFilter === filter.id
                                   ? "bg-white text-[#2A3D20] shadow-sm"
-                                  : "text-[#7A716A] hover:text-[#1C1C1A]"
+                                  : "text-[#7A716A] hover:bg-white hover:text-[#1C1C1A]"
                               }`}
                             >
                               {filter.label}
