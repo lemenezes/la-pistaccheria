@@ -108,7 +108,7 @@ export default function ProductListToolbar({
       </div>
 
       {/* Busca mobile (abaixo do header no mobile) */}
-      <div className="sm:hidden px-4 pb-3">
+      <div className="sm:hidden px-4 pt-3 pb-3">
         <div className="relative">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9A9189]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />

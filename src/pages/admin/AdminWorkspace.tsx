@@ -148,16 +148,16 @@ function SummaryCard({
   valueClassName?: string;
 }) {
   return (
-    <div className={`relative overflow-hidden rounded-[20px] md:rounded-[24px] border px-4 py-4 md:px-5 md:py-6 shadow-[0_22px_60px_rgba(95,87,81,0.08)] md:min-h-[176px] ${accentClassName}`}>
+    <div className={`relative overflow-hidden rounded-[18px] md:rounded-[24px] border px-3.5 py-3 md:px-5 md:py-6 shadow-[0_22px_60px_rgba(95,87,81,0.08)] md:min-h-[176px] ${accentClassName}`}>
       <div className="absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.72),rgba(255,255,255,0))]" />
-      <div className="flex h-full items-start gap-3 md:gap-4">
-        <div className={`flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-[14px] md:rounded-[18px] border shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] ${iconClassName}`}>
+      <div className="flex h-full items-start gap-2.5 md:gap-4">
+        <div className={`flex h-9 w-9 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-[12px] md:rounded-[18px] border shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] ${iconClassName}`}>
           <DashboardIcon type={icon} />
         </div>
         <div className="min-w-0 self-stretch flex flex-col justify-between">
           <div>
-            <p className="text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.08em] text-[#736A62]">{label}</p>
-            <p className={`mt-2 md:mt-3 leading-none text-[#1C1C1A] ${valueClassName || "text-[2.25rem] md:text-[3.35rem]"}`}>{value}</p>
+            <p className="text-[10px] md:text-[12px] font-semibold uppercase tracking-[0.08em] text-[#736A62]">{label}</p>
+            <p className={`mt-1.5 md:mt-3 leading-none text-[#1C1C1A] ${valueClassName || "text-[2rem] md:text-[3.35rem]"}`}>{value}</p>
           </div>
           <div className="mt-2 md:mt-4 space-y-1">
             <p className="text-[11px] md:text-[12px] leading-relaxed text-[#5E5750]">{detail}</p>
@@ -306,23 +306,28 @@ export default function AdminWorkspace() {
         <div className="min-h-full bg-[#F4F2EE]">
           <div className="min-h-full bg-[radial-gradient(circle_at_top_right,rgba(205,189,160,0.22),transparent_28%),radial-gradient(circle_at_22%_0%,rgba(78,102,56,0.08),transparent_22%),linear-gradient(180deg,#F7F3ED_0%,#F2EEE8_100%)] px-4 py-5 md:px-6 md:py-6">
             <div className="mx-auto flex w-full max-w-[1260px] flex-col gap-4 md:gap-6">
-              {/* Mobile header */}
+              {/* Mobile header — card unificado, lg:hidden */}
               <div className="lg:hidden overflow-hidden rounded-[16px] border border-[#E6DFD6] bg-white shadow-[0_2px_12px_rgba(95,87,81,0.06)]">
-                <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-[#EEE8DF]">
+                {/* Faixa de navegação — hamburguer + nome da marca */}
+                <div className="flex items-center gap-2.5 px-4 pt-3 pb-2.5 border-b border-[#F0EAE2]">
                   <button
                     type="button"
                     onClick={() => setMobileSidebarOpen((value) => !value)}
-                    className="flex flex-col gap-[5px] p-1.5 text-[#5F5751] hover:text-[#1C1C1A] shrink-0"
+                    className="flex flex-col gap-[5px] p-1.5 -ml-1 text-[#7A716A] hover:text-[#1C1C1A] shrink-0"
                     aria-label="Abrir menu"
                   >
                     <span className="block w-5 h-[2px] bg-current rounded" />
                     <span className="block w-5 h-[2px] bg-current rounded" />
                     <span className="block w-5 h-[2px] bg-current rounded" />
                   </button>
-                  <div className="flex-1 min-w-0">
-                    <h1 className="text-[1.3rem] font-semibold text-[#1C1C1A] leading-tight">Dashboard</h1>
-                    <p className="text-[12px] text-[#9A9189] mt-0.5">Resumo dos produtos, categorias e atividades recentes.</p>
-                  </div>
+                  <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#B4ACA5]">
+                    La Pistaccheria
+                  </span>
+                </div>
+                {/* Conteúdo da página */}
+                <div className="px-4 pt-3.5 pb-3 border-b border-[#EEE8DF]">
+                  <h1 className="text-[1.3rem] font-semibold text-[#1C1C1A] leading-tight">Dashboard</h1>
+                  <p className="text-[12px] text-[#9A9189] mt-1">Produtos, categorias e atividades recentes.</p>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-3">
                   <label className="flex flex-1 items-center gap-2 h-9 rounded-[8px] border border-[#E2DBD1] bg-[#F9F7F4] px-3 text-[#5F5751]">
@@ -424,7 +429,7 @@ export default function AdminWorkspace() {
                   icon="orders"
                   label="Pedidos"
                   value="Modulo em breve"
-                  detail="Integracao de pedidos ainda nao configurada"
+                  detail="Integração de pedidos ainda não configurada"
                   accentClassName="border-[#E7DDD2] bg-[linear-gradient(180deg,rgba(247,241,234,0.98),rgba(252,248,243,0.98))]"
                   iconClassName="border-[#DFCFC0] bg-[#F0E3D7] text-[#8B6B4D]"
                   valueClassName="text-[1.45rem] md:text-[1.7rem] leading-tight max-w-[10ch]"
@@ -470,7 +475,7 @@ export default function AdminWorkspace() {
                             key={product.id}
                             type="button"
                             onClick={() => navigate(`/admin/produtos/${product.id}`)}
-                            className="grid w-full grid-cols-[44px_minmax(0,1fr)_auto] md:grid-cols-[72px_minmax(0,1.35fr)_minmax(110px,0.8fr)_minmax(90px,0.6fr)_minmax(100px,0.7fr)] items-center gap-3 rounded-[18px] border border-transparent bg-[#FCFAF7] px-3 py-3 text-left transition-all hover:border-[#E2D9CE] hover:bg-white"
+                            className="grid w-full grid-cols-[44px_minmax(0,1fr)_auto] md:grid-cols-[72px_minmax(0,1.35fr)_minmax(110px,0.8fr)_minmax(90px,0.6fr)_minmax(100px,0.7fr)] items-start md:items-center gap-3 rounded-[18px] border border-transparent bg-[#FCFAF7] px-3 py-3 text-left transition-all hover:border-[#E2D9CE] hover:bg-white"
                           >
                             <div className="h-[44px] w-[44px] md:h-[58px] md:w-[58px] overflow-hidden rounded-[12px] md:rounded-[14px] border border-[#E3DBD0] bg-[#EEE7DD]">
                               {product.image_url ? (
@@ -482,8 +487,8 @@ export default function AdminWorkspace() {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate text-[14px] md:text-[15px] font-semibold text-[#1F1C18]">{product.name}</p>
-                              <p className="mt-1 truncate text-[12px] text-[#8A8179]">{product.category}</p>
+                              <p className="line-clamp-2 md:truncate text-[14px] md:text-[15px] font-semibold text-[#1F1C18] leading-snug">{product.name}</p>
+                              <p className="mt-1 truncate text-[11px] md:text-[12px] text-[#8A8179]">{product.category}</p>
                             </div>
                             <p className="hidden md:block truncate text-[12px] text-[#6E655D]">{product.category}</p>
                             <div>
