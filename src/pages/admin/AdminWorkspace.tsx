@@ -277,10 +277,6 @@ export default function AdminWorkspace() {
       .slice(0, 5);
   }, [categories, products]);
   const productActivationRate = totalProducts > 0 ? Math.round((activeProducts / totalProducts) * 100) : 0;
-  const userFirstName =
-    user?.user_metadata?.display_name?.split(" ")[0] ||
-    user?.email?.split("@")[0] ||
-    "Administrador";
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -325,7 +321,7 @@ export default function AdminWorkspace() {
                   </button>
                   <div className="flex-1 min-w-0">
                     <h1 className="text-[1.3rem] font-semibold text-[#1C1C1A] leading-tight">Dashboard</h1>
-                    <p className="text-[12px] text-[#9A9189] mt-0.5">Bem-vindo de volta, {userFirstName}.</p>
+                    <p className="text-[12px] text-[#9A9189] mt-0.5">Resumo dos produtos, categorias e atividades recentes.</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-3">
@@ -359,7 +355,6 @@ export default function AdminWorkspace() {
               <section className="hidden lg:block rounded-[28px] border border-[#E5DED4] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,243,235,0.94))] px-5 py-6 shadow-[0_30px_90px_rgba(42,61,32,0.08)] md:px-7">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-[#9A9189]">CMS</p>
                     <h1
                       className="text-[2.4rem] leading-[0.94] text-[#1C1C1A] md:text-[3rem]"
                       style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
@@ -367,37 +362,27 @@ export default function AdminWorkspace() {
                       Dashboard
                     </h1>
                     <p className="mt-3 max-w-[560px] text-[14px] leading-relaxed text-[#6F665E] md:text-[15px]">
-                      Bem-vindo de volta, {userFirstName}. Aqui esta um resumo da sua loja.
+                      Resumo dos produtos, categorias e atividades recentes.
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <label className="flex min-w-[190px] items-center gap-3 rounded-full border border-[#E2DBD1] bg-white/80 px-4 py-3 text-[#5F5751] shadow-[0_10px_25px_rgba(95,87,81,0.05)]">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" className="h-4 w-4 shrink-0">
-                        <rect x="5" y="4" width="14" height="16" rx="2" />
-                        <path d="M8 2v4M16 2v4M8 10h8" />
-                      </svg>
-                      <select
-                        value={periodDays}
-                        onChange={(event) => setPeriodDays(Number(event.target.value) as (typeof PERIOD_OPTIONS)[number]["value"])}
-                        className="w-full bg-transparent text-[13px] font-medium text-[#3E3934] outline-none"
-                        aria-label="Filtrar periodo do dashboard"
-                      >
-                        {PERIOD_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => navigate("/admin/produtos/novo")}
-                      className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#2A3D20] px-5 text-[11px] font-medium uppercase tracking-[0.16em] text-white shadow-[0_16px_32px_rgba(42,61,32,0.24)] transition-all hover:bg-[#223218] hover:shadow-[0_20px_38px_rgba(42,61,32,0.3)]"
+                  <label className="flex min-w-[190px] items-center gap-3 rounded-full border border-[#E2DBD1] bg-white/80 px-4 py-3 text-[#5F5751] shadow-[0_10px_25px_rgba(95,87,81,0.05)]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" className="h-4 w-4 shrink-0">
+                      <rect x="5" y="4" width="14" height="16" rx="2" />
+                      <path d="M8 2v4M16 2v4M8 10h8" />
+                    </svg>
+                    <select
+                      value={periodDays}
+                      onChange={(event) => setPeriodDays(Number(event.target.value) as (typeof PERIOD_OPTIONS)[number]["value"])}
+                      className="w-full bg-transparent text-[13px] font-medium text-[#3E3934] outline-none"
+                      aria-label="Filtrar periodo do dashboard"
                     >
-                      <DashboardIcon type="plus" />
-                      Novo produto
-                    </button>
-                  </div>
+                      {PERIOD_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
                 {error ? (
                   <div className="mt-5 rounded-[14px] border border-[#E0C8C8] bg-[#FBF2F2] px-4 py-3 text-[13px] text-[#8A3A3A]">

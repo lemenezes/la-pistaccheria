@@ -128,12 +128,14 @@ export default function AdminSidebar({
   
   const displayName =
     user?.user_metadata?.display_name ||
+    user?.user_metadata?.name ||
+    user?.user_metadata?.full_name ||
     user?.email?.split("@")[0] ||
     userEmail?.split("@")[0] ||
     "Administrador";
   
   const avatarInitial =
-    (user?.user_metadata?.display_name || userEmail || "A")[0].toUpperCase();
+    (user?.user_metadata?.display_name || user?.user_metadata?.name || user?.user_metadata?.full_name || userEmail || "A")[0].toUpperCase();
 
   function getItemClassName(item: NavItem) {
     const isActive = isItemActive(item);

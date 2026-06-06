@@ -62,14 +62,6 @@ function IconEye({ open }: { open: boolean }) {
   );
 }
 
-function IconArrow() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  );
-}
-
 export default function AdminLogin() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
@@ -97,7 +89,9 @@ export default function AdminLogin() {
       await login(email, password);
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro inesperado.";
+      const message = err instanceof Error && err.message
+        ? "E-mail ou senha incorretos."
+        : "Não foi possível realizar o acesso. Tente novamente.";
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -111,18 +105,20 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-5 py-12">
       {/* Brand */}
       <div className="flex flex-col items-center mb-8 select-none">
-        <PistachioMark />
+        <div className="scale-[1.18] origin-center">
+          <PistachioMark />
+        </div>
         <p
-          className="mt-4 text-[13px] tracking-[0.3em] uppercase text-charcoal font-medium"
+          className="mt-5 text-[14px] tracking-[0.3em] uppercase text-charcoal font-medium"
           style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
         >
           La Pistaccheria
         </p>
-        <div className="w-8 h-px bg-charcoal/20 mt-3" />
+        <div className="w-9 h-px bg-charcoal/20 mt-3" />
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-[420px] bg-white rounded-[20px] shadow-[0_4px_6px_rgba(28,28,26,0.04),0_12px_40px_rgba(28,28,26,0.09)] px-8 py-9">
+      <div className="w-full max-w-[468px] bg-white rounded-[20px] shadow-[0_4px_6px_rgba(28,28,26,0.04),0_12px_40px_rgba(28,28,26,0.09)] px-10 py-11">
         <p className="text-[10px] tracking-[0.22em] uppercase text-gold font-semibold mb-4">
           Área Administrativa
         </p>
@@ -130,7 +126,7 @@ export default function AdminLogin() {
           className="text-[2.15rem] font-light text-charcoal leading-[1.1] mb-2.5"
           style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
         >
-          Bem-vindo
+          Entrar
         </h1>
         <p className="text-[14px] text-warm-gray leading-relaxed mb-8">
           Gerencie produtos, categorias e conteúdos da La Pistaccheria.
@@ -209,12 +205,7 @@ export default function AdminLogin() {
             disabled={isSubmitting}
             className="w-full h-[52px] bg-[#2A3D20] hover:bg-[#223218] text-white text-[11px] tracking-[0.18em] uppercase font-medium rounded-[10px] flex items-center justify-center gap-3 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Entrando..." : (
-              <>
-                Entrar
-                <IconArrow />
-              </>
-            )}
+            {isSubmitting ? "Entrando..." : "Entrar"}
           </button>
         </form>
 
