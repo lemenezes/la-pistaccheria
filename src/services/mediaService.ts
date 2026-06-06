@@ -4,6 +4,7 @@ export interface MediaAsset {
   id: string;
   file_name: string;
   public_url: string;
+  bucket_area?: string | null;
   created_at: string;
 }
 

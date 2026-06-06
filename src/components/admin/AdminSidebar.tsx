@@ -23,7 +23,7 @@ const navItems: NavItem[] = [
   { label: "Depoimentos", iconType: "message", disabled: true },
   { label: "Configurações", iconType: "settings", disabled: true },
   { label: "Usuários", iconType: "users", disabled: true },
-  { label: "Mídia", iconType: "image", disabled: true },
+  { label: "Mídia", iconType: "image", path: "/admin/media" },
   { label: "Cupons", iconType: "ticket", disabled: true },
   { label: "Relatórios", iconType: "chart", disabled: true },
 ];

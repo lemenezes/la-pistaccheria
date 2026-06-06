@@ -14,7 +14,8 @@ const AdminWorkspace = lazy(() => import("./pages/admin/AdminWorkspace"));
 const AdminProdutos = lazy(() => import("./pages/admin/AdminProdutos"));
 const AdminProdutoNovo = lazy(() => import("./pages/admin/AdminProdutoNovo"));
 const AdminProdutoEditar = lazy(() => import("./pages/admin/AdminProdutoEditar"));
-const AdminCategorias = lazy(() => import("./pages/admin/AdminCategorias"));
+const AdminCategorias = lazy(() => import("./pages/admin/AdminCategorias.tsx"));
+const AdminMedia = lazy(() => import("./pages/admin/AdminMedia.tsx"));
 
 function PageFallback() {
   return (
@@ -94,6 +95,7 @@ export default function App() {
               <Route path="/admin/produtos/novo" element={<AdminProdutoNovo />} />
               <Route path="/admin/produtos/:id" element={<AdminProdutoEditar />} />
               <Route path="/admin/categorias" element={<AdminCategorias />} />
+              <Route path="/admin/media" element={<AdminMedia />} />
             </Route>
           </Routes>
         </CartProvider>
