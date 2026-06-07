@@ -7,7 +7,5 @@ bucket_name = "media-assets"
 binding = "MEDIA_ASSETS_BUCKET"
 
 [vars]
-SUPABASE_URL = ""
-SUPABASE_ANON_KEY = ""
-SUPABASE_SERVICE_ROLE_KEY = ""
-MEDIA_CDN_BASE_URL = ""
+SUPABASE_URL = "https://lubniqdgxohcjttpozmo.supabase.co"
+MEDIA_CDN_BASE_URL = "https://cdn.lapistaccheria.leandrom.com.br"
