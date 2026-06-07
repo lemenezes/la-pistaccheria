@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import AdminShell from "../../components/admin/AdminShell";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import { useAuth } from "../../context/AuthContext";
-import { deleteMediaAsset, getMediaAssets, type MediaAsset } from "../../services/mediaService";
+import {
+  deleteMediaAsset,
+  getMediaAssets,
+  uploadMediaAsset,
+  type MediaAsset,
+} from "../../services/mediaService";
 
 type MediaUiState = {
   isLoading: boolean;
@@ -49,9 +54,11 @@ function MediaThumbnail({ asset }: { asset: MediaAsset }) {
 
 export default function AdminMedia() {
   const { user, logout } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
   const [ui, setUi] = useState<MediaUiState>({ isLoading: true, error: null });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const loadMediaAssets = useCallback(async () => {
@@ -108,6 +115,33 @@ export default function AdminMedia() {
     toast.success("Mídia excluída com sucesso.");
   }, []);
 
+  const handleUploadClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+
+      if (!file) {
+        return;
+      }
+
+      try {
+        setIsUploading(true);
+        const createdAsset = await uploadMediaAsset(file, "products");
+        setMediaAssets((currentAssets) => [createdAsset, ...currentAssets]);
+        toast.success("Imagem enviada com sucesso.");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao enviar imagem.");
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    []
+  );
+
   const handleLogout = useCallback(async () => {
     try {
       setIsLoggingOut(true);
@@ -133,6 +167,13 @@ export default function AdminMedia() {
       }
       main={
         <div className="min-h-full bg-[#F4F2EE]">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(event) => void handleFileChange(event)}
+          />
           <div className="min-h-full bg-[radial-gradient(circle_at_top_right,rgba(205,189,160,0.22),transparent_28%),radial-gradient(circle_at_22%_0%,rgba(78,102,56,0.08),transparent_22%),linear-gradient(180deg,#F7F3ED_0%,#F2EEE8_100%)] px-4 py-5 md:px-6 md:py-6">
             <div className="mx-auto flex w-full max-w-[1260px] flex-col gap-6">
               <div className="lg:hidden overflow-hidden rounded-[16px] border border-[#E6DFD6] bg-white shadow-[0_2px_12px_rgba(95,87,81,0.06)]">
@@ -157,6 +198,14 @@ export default function AdminMedia() {
                         : `${mediaAssets.length} registro${mediaAssets.length !== 1 ? "s" : ""}`}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleUploadClick}
+                    disabled={isUploading}
+                    className="inline-flex shrink-0 items-center justify-center rounded-full border border-[#D7D0C4] bg-white px-3.5 py-2 text-[11px] font-medium text-[#2A3D20] transition-colors hover:bg-[#F5F1EA] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isUploading ? "Enviando..." : "Upload imagem"}
+                  </button>
                 </div>
                 {ui.error ? (
                   <div className="px-4 py-2.5 bg-[#FBF2F2] border-b border-[#E0C8C8] text-[12px] text-[#8A3A3A]">
@@ -184,6 +233,14 @@ export default function AdminMedia() {
                         : `${mediaAssets.length} registro${mediaAssets.length !== 1 ? "s" : ""}`}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleUploadClick}
+                    disabled={isUploading}
+                    className="inline-flex h-11 shrink-0 items-center justify-center rounded-full border border-[#D7D0C4] bg-white px-4 text-[12px] font-medium text-[#2A3D20] transition-colors hover:bg-[#F5F1EA] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isUploading ? "Enviando..." : "Upload imagem"}
+                  </button>
                 </div>
                 {ui.error ? (
                   <div className="mt-5 rounded-[12px] border border-[#E0C8C8] bg-[#FBF2F2] px-4 py-3 text-[13px] text-[#8A3A3A]">

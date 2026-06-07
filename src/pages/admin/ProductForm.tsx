@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
+import { getMediaAssets, type MediaAsset } from "../../services/mediaService";
 
 export type ProductFormValues = {
   name: string;
@@ -91,6 +92,10 @@ export default function ProductForm({
   });
 
   const [slugTouched, setSlugTouched] = useState(!!initialData?.slug);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
+  const [mediaError, setMediaError] = useState<string | null>(null);
 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     const name = e.target.value;
@@ -148,6 +153,39 @@ export default function ProductForm({
     e.preventDefault();
     await onSubmit(form);
   }
+
+  const handleOpenMediaModal = useCallback(async () => {
+    setIsMediaModalOpen(true);
+    setIsLoadingMedia(true);
+    setMediaError(null);
+
+    const { data, error: queryError } = await getMediaAssets();
+
+    if (queryError) {
+      setMediaAssets([]);
+      setMediaError(queryError.message || "Erro ao carregar a biblioteca de mídia.");
+      setIsLoadingMedia(false);
+      return;
+    }
+
+    setMediaAssets((data ?? []) as MediaAsset[]);
+    setIsLoadingMedia(false);
+  }, []);
+
+  const handleSelectMediaAsset = useCallback((asset: MediaAsset) => {
+    setForm((prev) => ({
+      ...prev,
+      image_url: asset.public_url,
+    }));
+    setIsMediaModalOpen(false);
+  }, []);
+
+  const handleClearSelectedImage = useCallback(() => {
+    setForm((prev) => ({
+      ...prev,
+      image_url: "",
+    }));
+  }, []);
 
   return (
     <form id={id} onSubmit={handleSubmit} noValidate>
@@ -255,21 +293,35 @@ export default function ProductForm({
           />
         </div>
 
-        {/* URL da imagem */}
+        {/* Imagem principal */}
         <div>
-          <label htmlFor="pf-image_url" className={labelClass}>
+          <label className={labelClass}>
             Imagem principal
           </label>
-          <input
-            id="pf-image_url"
-            name="image_url"
-            type="url"
-            value={form.image_url}
-            onChange={handleChange}
-            autoComplete="off"
-            placeholder="https://..."
-            className={inputClass}
-          />
+          <input type="hidden" name="image_url" value={form.image_url} />
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => void handleOpenMediaModal()}
+              className="inline-flex h-12 items-center justify-center rounded-[5px] border border-[#DDD8D0] bg-white px-4 text-[12px] font-medium text-[#2A3D20] transition-colors hover:bg-[#F5F1EA]"
+            >
+              Selecionar da Biblioteca
+            </button>
+            {form.image_url ? (
+              <button
+                type="button"
+                onClick={handleClearSelectedImage}
+                className="inline-flex h-12 items-center justify-center rounded-[5px] border border-[#E0C8C8] bg-[#FBF2F2] px-4 text-[12px] font-medium text-[#8A3A3A] transition-colors hover:bg-[#F8E7E7]"
+              >
+                Remover
+              </button>
+            ) : null}
+          </div>
+          {form.image_url ? (
+            <p className="mt-2 break-all text-[11px] text-[#7A716A]">{form.image_url}</p>
+          ) : (
+            <p className="mt-2 text-[11px] text-[#9A9189]">Nenhuma imagem selecionada.</p>
+          )}
           {form.image_url && (
             <div className="mt-3 border border-[#E5E0D8] bg-[#F7F5F2] p-2 rounded-[5px] overflow-hidden" style={{ maxWidth: 160 }}>
               <img
@@ -444,6 +496,64 @@ export default function ProductForm({
           </button>
         </div>
       )}
+
+      {isMediaModalOpen ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 px-4 py-6">
+          <div className="w-full max-w-[900px] rounded-[14px] border border-[#E2DBD2] bg-white shadow-[0_30px_80px_rgba(31,30,28,0.22)]">
+            <div className="flex items-center justify-between border-b border-[#EEE8DF] px-5 py-4">
+              <div>
+                <h3 className="text-[1.1rem] font-semibold text-[#1C1C1A]">Biblioteca de Mídia</h3>
+                <p className="mt-1 text-[12px] text-[#7A716A]">
+                  Selecione uma imagem para preencher a imagem principal do produto.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMediaModalOpen(false)}
+                className="inline-flex h-9 items-center justify-center rounded-full border border-[#D7D0C4] bg-white px-4 text-[11px] font-medium uppercase tracking-[0.08em] text-[#5F5751] transition-colors hover:bg-[#F5F1EA]"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="max-h-[68vh] overflow-auto px-5 py-4">
+              {isLoadingMedia ? (
+                <div className="py-10 text-center text-[13px] text-[#7A716A]">Carregando biblioteca...</div>
+              ) : mediaError ? (
+                <div className="rounded-[10px] border border-[#E0C8C8] bg-[#FBF2F2] px-4 py-3 text-[13px] text-[#8A3A3A]">
+                  {mediaError}
+                </div>
+              ) : mediaAssets.length === 0 ? (
+                <div className="py-10 text-center text-[13px] text-[#7A716A]">Nenhuma imagem disponível.</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {mediaAssets.map((asset) => (
+                    <button
+                      key={asset.id}
+                      type="button"
+                      onClick={() => handleSelectMediaAsset(asset)}
+                      className="rounded-[10px] border border-[#E7E1D8] bg-[#FCFBF9] p-2 text-left transition-colors hover:border-[#CFC4B5]"
+                    >
+                      <div className="h-36 w-full overflow-hidden rounded-[8px] border border-[#E9E3DB] bg-[#F2EEE8]">
+                        <img
+                          src={asset.public_url}
+                          alt={asset.file_name || "Imagem"}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                      <p className="mt-2 truncate text-[12px] font-medium text-[#1C1C1A]">
+                        {asset.file_name || "Arquivo sem nome"}
+                      </p>
+                      <p className="mt-1 truncate text-[11px] text-[#7A716A]">{asset.public_url}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }
