@@ -1,7 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Minus, Plus, ShoppingBag, ArrowLeft } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  ShoppingBag,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
 import { products as fallbackProducts } from "../data/products";
 import type { Product } from "../data/products";
 import { useCart } from "../context/CartContext";
@@ -55,6 +62,8 @@ export default function Produto() {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -77,7 +86,9 @@ export default function Produto() {
           // Se retorna null, significa que o produto não está disponível publicamente
           // (pode estar inativo, não existir, ou erro de conexão sem fallback)
           setProduct(loadedProduct);
-          setProducts(loadedProducts.length > 0 ? loadedProducts : fallbackProducts);
+          setProducts(
+            loadedProducts.length > 0 ? loadedProducts : fallbackProducts
+          );
 
           if (!loadedProduct) {
             setLoadError(true);
@@ -107,6 +118,78 @@ export default function Produto() {
       .filter(p => p.category === product.category && p.id !== product.id)
       .slice(0, 3);
   }, [product, products]);
+
+  const productImages = useMemo(() => {
+    if (!product) return [];
+
+    const images = Array.from(
+      new Set([product.image, ...(product.images ?? [])])
+    ).filter(
+      (value): value is string =>
+        typeof value === "string" && value.trim().length > 0
+    );
+
+    return images;
+  }, [product]);
+
+  const displayedImage =
+    productImages[selectedImageIndex] || productImages[0] || product?.image;
+  const hasGallery = productImages.length > 1;
+
+  const goToPreviousImage = useCallback(() => {
+    if (!hasGallery) return;
+
+    setSelectedImageIndex(prev =>
+      prev === 0 ? productImages.length - 1 : prev - 1
+    );
+  }, [hasGallery, productImages.length]);
+
+  const goToNextImage = useCallback(() => {
+    if (!hasGallery) return;
+
+    setSelectedImageIndex(prev =>
+      prev === productImages.length - 1 ? 0 : prev + 1
+    );
+  }, [hasGallery, productImages.length]);
+
+  useEffect(() => {
+    setSelectedImageIndex(0);
+  }, [product?.id]);
+
+  useEffect(() => {
+    if (!hasGallery) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && isLightboxOpen) {
+        setIsLightboxOpen(false);
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        goToPreviousImage();
+      }
+
+      if (event.key === "ArrowRight") {
+        goToNextImage();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [goToNextImage, goToPreviousImage, hasGallery, isLightboxOpen]);
+
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isLightboxOpen]);
 
   if (isLoading && !product) {
     return <ProductSkeleton />;
@@ -162,80 +245,170 @@ export default function Produto() {
       {/* ── Produto principal ────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-5 md:px-10 pb-20 grid md:grid-cols-2 gap-12 md:gap-20">
         {/* Imagem */}
-        <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="relative aspect-square overflow-hidden">
-          {product.image ? (
-            <>
-              <img
-                src={product.image}
-                alt={product.name}
-                className="absolute inset-0 w-full h-full object-cover"
-                decoding="async"
-              />
-              <div className="absolute inset-0 bg-charcoal/10" />
-            </>
-          ) : (
-            <>
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(ellipse at 42% 35%, #EDF2E8 0%, #DDE8D4 50%, #C4D4BA 100%)"
-                }}
-              />
-              <div
-                className="absolute inset-0 opacity-[0.04]"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(135deg, #3A4D2C 0px, #3A4D2C 1px, transparent 1px, transparent 14px)"
-                }}
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(ellipse at center, transparent 50%, rgba(58,77,44,0.08) 100%)"
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
-                <p
-                  className="text-xl italic text-pistachio/35 text-center px-8 leading-snug"
+        <div>
+          <motion.div
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="relative aspect-square overflow-hidden"
+            onClick={() => {
+              if (displayedImage) {
+                setIsLightboxOpen(true);
+              }
+            }}
+            onTouchStart={event => {
+              if (!hasGallery) return;
+              const touchStartX = event.changedTouches[0]?.clientX;
+              if (typeof touchStartX !== "number") return;
+              (event.currentTarget as HTMLDivElement).dataset.touchStartX =
+                String(touchStartX);
+            }}
+            onTouchEnd={event => {
+              if (!hasGallery) return;
+              const touchStartRaw = (event.currentTarget as HTMLDivElement)
+                .dataset.touchStartX;
+              if (!touchStartRaw) return;
+
+              const touchStartX = Number(touchStartRaw);
+              const touchEndX = event.changedTouches[0]?.clientX;
+              if (
+                !Number.isFinite(touchStartX) ||
+                typeof touchEndX !== "number"
+              ) {
+                return;
+              }
+
+              const deltaX = touchEndX - touchStartX;
+              const swipeThreshold = 36;
+
+              if (deltaX >= swipeThreshold) {
+                goToPreviousImage();
+              } else if (deltaX <= -swipeThreshold) {
+                goToNextImage();
+              }
+            }}>
+            {displayedImage ? (
+              <>
+                <img
+                  src={displayedImage}
+                  alt={product.name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-charcoal/10" />
+              </>
+            ) : (
+              <>
+                <div
+                  className="absolute inset-0"
                   style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif"
-                  }}>
-                  {product.name}
-                </p>
-              </div>
-            </>
-          )}
+                    background:
+                      "radial-gradient(ellipse at 42% 35%, #EDF2E8 0%, #DDE8D4 50%, #C4D4BA 100%)"
+                  }}
+                />
+                <div
+                  className="absolute inset-0 opacity-[0.04]"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(135deg, #3A4D2C 0px, #3A4D2C 1px, transparent 1px, transparent 14px)"
+                  }}
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at center, transparent 50%, rgba(58,77,44,0.08) 100%)"
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
+                  <p
+                    className="text-xl italic text-pistachio/35 text-center px-8 leading-snug"
+                    style={{
+                      fontFamily: "'Cormorant Garamond', Georgia, serif"
+                    }}>
+                    {product.name}
+                  </p>
+                </div>
+              </>
+            )}
 
-          {product.badge && (
-            <span className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-charcoal/75 backdrop-blur-sm text-[9px] tracking-[0.22em] uppercase font-normal text-cream">
-              {product.badge}
-            </span>
-          )}
+            {product.badge && (
+              <span className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-charcoal/75 backdrop-blur-sm text-[9px] tracking-[0.22em] uppercase font-normal text-cream">
+                {product.badge}
+              </span>
+            )}
 
-          {/* Corner marks */}
-          <div
-            className="absolute top-4 left-4 w-5 h-5 border-t border-l border-pistachio/20"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute top-4 right-4 w-5 h-5 border-t border-r border-pistachio/20"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute bottom-4 left-4 w-5 h-5 border-b border-l border-pistachio/20"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute bottom-4 right-4 w-5 h-5 border-b border-r border-pistachio/20"
-            aria-hidden="true"
-          />
-        </motion.div>
+            {/* Corner marks */}
+            <div
+              className="absolute top-4 left-4 w-5 h-5 border-t border-l border-pistachio/20"
+              aria-hidden="true"
+            />
+            <div
+              className="absolute top-4 right-4 w-5 h-5 border-t border-r border-pistachio/20"
+              aria-hidden="true"
+            />
+            <div
+              className="absolute bottom-4 left-4 w-5 h-5 border-b border-l border-pistachio/20"
+              aria-hidden="true"
+            />
+            <div
+              className="absolute bottom-4 right-4 w-5 h-5 border-b border-r border-pistachio/20"
+              aria-hidden="true"
+            />
+
+            {hasGallery ? (
+              <>
+                <button
+                  type="button"
+                  onClick={event => {
+                    event.stopPropagation();
+                    goToPreviousImage();
+                  }}
+                  className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-cream/50 bg-charcoal/30 p-1.5 text-cream/90 backdrop-blur-sm transition-colors hover:bg-charcoal/50 hover:text-cream"
+                  aria-label="Imagem anterior">
+                  <ChevronLeft size={18} strokeWidth={1.8} />
+                </button>
+                <button
+                  type="button"
+                  onClick={event => {
+                    event.stopPropagation();
+                    goToNextImage();
+                  }}
+                  className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-cream/50 bg-charcoal/30 p-1.5 text-cream/90 backdrop-blur-sm transition-colors hover:bg-charcoal/50 hover:text-cream"
+                  aria-label="Próxima imagem">
+                  <ChevronRight size={18} strokeWidth={1.8} />
+                </button>
+                <div className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-charcoal/55 px-3 py-1 text-[10px] tracking-[0.16em] text-cream backdrop-blur-sm">
+                  {selectedImageIndex + 1} / {productImages.length}
+                </div>
+              </>
+            ) : null}
+          </motion.div>
+
+          {hasGallery ? (
+            <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-5">
+              {productImages.map((image, index) => (
+                <button
+                  key={`${image}-${index}`}
+                  type="button"
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`relative aspect-square overflow-hidden border transition-colors ${
+                    index === selectedImageIndex
+                      ? "border-pistachio"
+                      : "border-cream-deep hover:border-pistachio/45"
+                  }`}
+                  aria-label={`Ver imagem ${index + 1} de ${product.name}`}>
+                  <img
+                    src={image}
+                    alt={`${product.name} - imagem ${index + 1}`}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         {/* Detalhes */}
         <motion.div
@@ -341,6 +514,56 @@ export default function Produto() {
           </div>
         </motion.div>
       </section>
+
+      {isLightboxOpen && displayedImage ? (
+        <div
+          className="fixed inset-0 z-[140] flex items-center justify-center bg-charcoal/85 px-4 py-6"
+          onClick={event => {
+            if (event.target === event.currentTarget) {
+              setIsLightboxOpen(false);
+            }
+          }}>
+          <button
+            type="button"
+            onClick={() => setIsLightboxOpen(false)}
+            className="absolute right-4 top-4 rounded-full border border-cream/45 bg-charcoal/35 px-3 py-1.5 text-[11px] tracking-[0.14em] uppercase text-cream transition-colors hover:bg-charcoal/55"
+            aria-label="Fechar galeria">
+            Fechar
+          </button>
+
+          <div className="relative w-full max-w-5xl">
+            <div className="relative max-h-[85vh] overflow-hidden rounded-[8px] border border-cream/25 bg-[#11110F]">
+              <img
+                src={displayedImage}
+                alt={product.name}
+                className="h-full max-h-[85vh] w-full object-contain"
+              />
+
+              {hasGallery ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={goToPreviousImage}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-cream/50 bg-charcoal/45 p-2 text-cream transition-colors hover:bg-charcoal/65"
+                    aria-label="Imagem anterior (modal)">
+                    <ChevronLeft size={20} strokeWidth={1.8} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goToNextImage}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-cream/50 bg-charcoal/45 p-2 text-cream transition-colors hover:bg-charcoal/65"
+                    aria-label="Próxima imagem (modal)">
+                    <ChevronRight size={20} strokeWidth={1.8} />
+                  </button>
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-charcoal/65 px-3 py-1 text-[10px] tracking-[0.16em] text-cream backdrop-blur-sm">
+                    {selectedImageIndex + 1} / {productImages.length}
+                  </div>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* ── Produtos relacionados ────────────────────────── */}
       {related.length > 0 && (

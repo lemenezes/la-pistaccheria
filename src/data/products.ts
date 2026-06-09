@@ -10,6 +10,7 @@ export interface Product {
   badge?: "Novo" | "Destaque" | "Edição Limitada";
   featured?: boolean;
   image?: string;
+  images?: string[];
 }
 
 export const products: Product[] = [
@@ -26,7 +27,8 @@ export const products: Product[] = [
     weight: "200g",
     badge: "Destaque",
     featured: true,
-    image: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=900&h=900&q=85&auto=format&fit=crop"
+    image:
+      "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=900&h=900&q=85&auto=format&fit=crop"
   },
   {
     id: "cremino",
@@ -41,7 +43,8 @@ export const products: Product[] = [
     weight: "Caixa com 4 unidades",
     badge: "Edição Limitada",
     featured: true,
-    image: "https://images.unsplash.com/photo-1481391243133-f96216dcb5d2?w=900&h=900&q=85&auto=format&fit=crop"
+    image:
+      "https://images.unsplash.com/photo-1481391243133-f96216dcb5d2?w=900&h=900&q=85&auto=format&fit=crop"
   },
   {
     id: "torta-pistacchio",
@@ -55,7 +58,8 @@ export const products: Product[] = [
     price: 215,
     weight: "22cm de diâmetro",
     featured: true,
-    image: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=900&h=900&q=85&auto=format&fit=crop"
+    image:
+      "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=900&h=900&q=85&auto=format&fit=crop"
   },
   {
     id: "cannolo",
@@ -69,7 +73,8 @@ export const products: Product[] = [
     price: 98,
     weight: "Caixa com 6 unidades",
     badge: "Novo",
-    image: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=900&h=900&q=85&auto=format&fit=crop"
+    image:
+      "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=900&h=900&q=85&auto=format&fit=crop"
   },
   {
     id: "tartufo",
@@ -82,7 +87,8 @@ export const products: Product[] = [
       "Trufa artesanal de pistache com cobertura de chocolate amargo 70%. Interior cremoso e intenso, finalizada com granella di pistacchio.",
     price: 68,
     weight: "Caixa com 6 unidades",
-    image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=900&h=900&q=85&auto=format&fit=crop"
+    image:
+      "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=900&h=900&q=85&auto=format&fit=crop"
   },
   {
     id: "granella",
@@ -95,6 +101,7 @@ export const products: Product[] = [
       "Pistache de Bronte torrado e granulado, finalizado com flor de sal siciliana. Ideal para finalizar sobremesas, sorvetes e saladas.",
     price: 52,
     weight: "150g",
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Cezerye_with_pistachio_nuts.jpg"
+    image:
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Cezerye_with_pistachio_nuts.jpg"
   }
 ];

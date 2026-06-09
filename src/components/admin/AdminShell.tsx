@@ -18,7 +18,7 @@ export default function AdminShell({
 }: AdminShellProps) {
   return (
     <div className="min-h-screen flex bg-[#F4F2EE]">
-      <Toaster richColors position="bottom-right" closeButton />
+      <Toaster richColors position="bottom-center" closeButton />
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"

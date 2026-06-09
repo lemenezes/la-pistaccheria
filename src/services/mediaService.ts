@@ -67,7 +67,8 @@ export const uploadMediaAsset = async (file: File, bucketArea = "products") => {
     );
   }
 
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const { data: sessionData, error: sessionError } =
+    await supabase.auth.getSession();
 
   if (sessionError) {
     throw new Error(sessionError.message || "Falha ao obter a sessão atual.");
@@ -83,18 +84,24 @@ export const uploadMediaAsset = async (file: File, bucketArea = "products") => {
   formData.append("file", file);
   formData.append("bucket_area", bucketArea);
 
-  const response = await fetch(`${mediaUploadWorkerUrl.replace(/\/+$/, "")}/upload`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: formData,
-  });
+  const response = await fetch(
+    `${mediaUploadWorkerUrl.replace(/\/+$/, "")}/upload`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: formData
+    }
+  );
 
-  const payload = (await response.json().catch(() => null)) as MediaAsset | {
-    code?: string;
-    message?: string;
-  } | null;
+  const payload = (await response.json().catch(() => null)) as
+    | MediaAsset
+    | {
+        code?: string;
+        message?: string;
+      }
+    | null;
 
   if (!response.ok) {
     const message =
@@ -110,7 +117,7 @@ export const uploadMediaAsset = async (file: File, bucketArea = "products") => {
 export const deleteUploadedMediaAsset = async ({
   publicUrl,
   objectKey,
-  excludeProductId,
+  excludeProductId
 }: DeleteUploadedMediaAssetInput) => {
   if (!mediaUploadWorkerUrl) {
     throw new Error(
@@ -139,22 +146,25 @@ export const deleteUploadedMediaAsset = async ({
     throw new Error("Usuário não autenticado.");
   }
 
-  const response = await fetch(`${mediaUploadWorkerUrl.replace(/\/+$/, "")}/asset`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      public_url: normalizedPublicUrl || undefined,
-      object_key: normalizedObjectKey || undefined,
-      exclude_product_id: normalizedExcludeProductId || undefined,
-    }),
-  });
+  const response = await fetch(
+    `${mediaUploadWorkerUrl.replace(/\/+$/, "")}/asset`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        public_url: normalizedPublicUrl || undefined,
+        object_key: normalizedObjectKey || undefined,
+        exclude_product_id: normalizedExcludeProductId || undefined
+      })
+    }
+  );
 
-  const payload = (await response.json().catch(() => null)) as
-    | DeleteUploadedMediaAssetResult
-    | null;
+  const payload = (await response
+    .json()
+    .catch(() => null)) as DeleteUploadedMediaAssetResult | null;
 
   if (response.status === 409 && payload?.code === "ASSET_IN_USE") {
     return payload;

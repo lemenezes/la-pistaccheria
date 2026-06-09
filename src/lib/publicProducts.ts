@@ -3,6 +3,16 @@ import type { DatabaseProduct } from "../types/database";
 import { getPublicProductBySlug, getPublicProducts } from "./supabase";
 
 function mapDatabaseProductToProduct(product: DatabaseProduct): Product {
+  const images = Array.from(
+    new Set([
+      product.image_url,
+      ...(Array.isArray(product.gallery_urls) ? product.gallery_urls : [])
+    ])
+  ).filter(
+    (value): value is string =>
+      typeof value === "string" && value.trim().length > 0
+  );
+
   return {
     id: product.id,
     slug: product.slug,
@@ -14,14 +24,16 @@ function mapDatabaseProductToProduct(product: DatabaseProduct): Product {
     weight: product.weight ?? undefined,
     badge: product.badge ?? undefined,
     featured: product.featured,
-    image: product.image_url ?? undefined,
+    image: images[0] ?? undefined,
+    images
   };
 }
 
 function isConnectionError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const err = error as Record<string, unknown>;
-  const message = typeof err.message === "string" ? err.message.toLowerCase() : "";
+  const message =
+    typeof err.message === "string" ? err.message.toLowerCase() : "";
   return (
     message.includes("network") ||
     message.includes("timeout") ||
