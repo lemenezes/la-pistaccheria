@@ -14,7 +14,7 @@ export default function AdminShell({
   main,
   panel,
   isSidebarOpen,
-  onCloseSidebar,
+  onCloseSidebar
 }: AdminShellProps) {
   return (
     <div className="min-h-screen flex bg-[#F4F2EE]">
@@ -36,8 +36,7 @@ export default function AdminShell({
           lg:translate-x-0
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
         `}
-        style={{ background: "#2A3D20" }}
-      >
+        style={{ background: "#2A3D20" }}>
         {sidebar}
       </aside>
 

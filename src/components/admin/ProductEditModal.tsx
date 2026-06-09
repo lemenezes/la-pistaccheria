@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ProductForm, {
   type ProductFormValues
 } from "../../pages/admin/ProductForm";
@@ -10,6 +10,7 @@ interface ProductEditModalProps {
   isSubmitting: boolean;
   submitError: string | null;
   onSubmit: (values: ProductFormValues) => Promise<boolean>;
+  onDelete: () => Promise<void>;
   onClose: () => void;
   categories: DatabaseCategory[];
 }
@@ -22,17 +23,27 @@ export default function ProductEditModal({
   isSubmitting,
   submitError,
   onSubmit,
+  onDelete,
   onClose,
   categories
 }: ProductEditModalProps) {
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
   // Fechar com Escape
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && !isSubmitting) onClose();
+      if (e.key !== "Escape" || isSubmitting) return;
+
+      if (isDeleteConfirmOpen) {
+        setIsDeleteConfirmOpen(false);
+        return;
+      }
+
+      onClose();
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isSubmitting, onClose]);
+  }, [isDeleteConfirmOpen, isSubmitting, onClose]);
 
   // Bloquear scroll do body enquanto modal está aberto
   useEffect(() => {
@@ -104,6 +115,15 @@ export default function ProductEditModal({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-7 py-4 border-t border-[#ECEAE5] bg-[#FAFAF8] rounded-b-[8px] shrink-0">
+          {mode === "edit" && product ? (
+            <button
+              type="button"
+              onClick={() => setIsDeleteConfirmOpen(true)}
+              disabled={isSubmitting}
+              className="h-10 px-5 border border-[#E0C8C8] text-[13px] text-[#8A3A3A] hover:bg-[#FBF2F2] disabled:opacity-50 transition-colors rounded-[5px]">
+              Excluir produto
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onClose}
@@ -124,6 +144,36 @@ export default function ProductEditModal({
                 : "Salvar alterações"}
           </button>
         </div>
+
+        {isDeleteConfirmOpen ? (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-[rgba(28,28,26,0.55)] px-6">
+            <div className="w-full max-w-[420px] rounded-[10px] border border-[#E5DED4] bg-white p-6 shadow-[0_20px_60px_rgba(31,30,28,0.20)]">
+              <h3 className="text-[1.1rem] font-semibold text-[#1C1C1A]">
+                Tem certeza que deseja excluir este produto?
+              </h3>
+              <p className="mt-2 text-[13px] text-[#5F5751] leading-relaxed">
+                Esta ação não poderá ser desfeita.
+              </p>
+
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteConfirmOpen(false)}
+                  disabled={isSubmitting}
+                  className="h-10 px-4 border border-[#D5CFC8] text-[12px] text-[#5F5751] hover:text-[#1C1C1A] hover:border-[#9A9189] disabled:opacity-50 transition-colors rounded-[5px]">
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void onDelete()}
+                  disabled={isSubmitting}
+                  className="h-10 px-4 border border-[#C98B8B] bg-[#FBF2F2] text-[12px] font-medium text-[#8A3A3A] hover:bg-[#F8E7E7] disabled:opacity-50 transition-colors rounded-[5px]">
+                  Confirmar exclusão
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

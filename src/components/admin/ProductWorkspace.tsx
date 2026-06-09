@@ -4,12 +4,17 @@ import { toast } from "sonner";
 import { useAuth } from "../../context/AuthContext";
 import {
   createProduct,
+  deleteProduct,
   getCategories,
   getProducts,
   updateProduct
 } from "../../lib/supabase";
 import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 import type { ProductFormValues } from "../../pages/admin/ProductForm";
+import {
+  deleteUploadedMediaAsset,
+  isDeleteUploadedMediaAssetSuccessful
+} from "../../services/mediaService";
 import AdminShell from "./AdminShell";
 import AdminSidebar from "./AdminSidebar";
 import ProductList from "./ProductList";
@@ -19,6 +24,17 @@ import ProductListToolbar, {
 } from "./ProductListToolbar";
 import ProductPreviewPanel from "./ProductPreviewPanel";
 import ProductEditModal from "./ProductEditModal";
+
+function getProductImageUrls(product: DatabaseProduct) {
+  const galleryUrls = Array.isArray(product.gallery_urls)
+    ? product.gallery_urls
+    : [];
+
+  return Array.from(new Set([product.image_url, ...galleryUrls])).filter(
+    (value): value is string =>
+      typeof value === "string" && value.trim().length > 0
+  );
+}
 
 export default function ProductWorkspace() {
   const navigate = useNavigate();
@@ -254,6 +270,69 @@ export default function ProductWorkspace() {
     }
   }
 
+  async function cleanupDeletedProductImages(product: DatabaseProduct) {
+    const imageUrls = getProductImageUrls(product);
+
+    if (imageUrls.length === 0) {
+      return;
+    }
+
+    const results = await Promise.allSettled(
+      imageUrls.map(publicUrl =>
+        deleteUploadedMediaAsset({
+          publicUrl,
+          excludeProductId: product.id
+        })
+      )
+    );
+
+    const hasUnexpectedError = results.some(result => {
+      if (result.status === "rejected") {
+        return true;
+      }
+
+      return !isDeleteUploadedMediaAssetSuccessful(result.value);
+    });
+
+    if (hasUnexpectedError) {
+      toast.warning(
+        "Produto excluído, mas não foi possível remover uma imagem antiga do armazenamento."
+      );
+    }
+  }
+
+  async function handleDeleteSelectedProduct() {
+    if (!selectedProductId || !selectedProduct) {
+      toast.error("Selecione um produto para excluir.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const productSnapshot = selectedProduct;
+      const { error: apiError } = await deleteProduct(selectedProductId);
+
+      if (apiError) {
+        toast.error(apiError.message || "Erro ao excluir produto.");
+        return;
+      }
+
+      setProducts(prev =>
+        prev.filter(product => product.id !== selectedProductId)
+      );
+      setSelectedProductId(null);
+      setModalMode(null);
+      toast.success("Produto excluído com sucesso.");
+
+      void cleanupDeletedProductImages(productSnapshot);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro inesperado.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   function handleOpenCreate() {
     setSelectedProductId(null);
     setModalMode("create");
@@ -428,6 +507,7 @@ export default function ProductWorkspace() {
           isSubmitting={isSubmitting}
           submitError={null}
           onSubmit={handleSubmit}
+          onDelete={handleDeleteSelectedProduct}
           onClose={handleCloseModal}
           categories={categories}
         />
