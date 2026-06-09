@@ -2,9 +2,9 @@ import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 import {
-  getMediaAssets,
-  uploadMediaAsset,
-  type MediaAsset
+  deleteUploadedMediaAsset,
+  isDeleteUploadedMediaAssetSuccessful,
+  uploadMediaAsset
 } from "../../services/mediaService";
 
 export type ProductFormValues = {
@@ -26,7 +26,6 @@ export type ProductFormValues = {
 
 type ProductFormErrors = {
   name: string;
-  slug: string;
   category: string;
   price: string;
   short_description: string;
@@ -36,7 +35,7 @@ type ProductFormErrors = {
 interface ProductFormProps {
   id?: string;
   initialData?: Partial<DatabaseProduct>;
-  onSubmit: (values: ProductFormValues) => Promise<void>;
+  onSubmit: (values: ProductFormValues) => Promise<boolean>;
   isSubmitting: boolean;
   submitLabel: string;
   onCancel: () => void;
@@ -54,6 +53,8 @@ const labelClass =
 const textareaClass =
   "w-full px-4 py-3 border border-[#DDD8D0] bg-white text-[13.5px] text-[#1C1C1A] placeholder:text-[#A09890] outline-none focus:border-[#4E6638] focus:ring-1 focus:ring-[#4E6638]/20 transition-colors resize-none leading-relaxed rounded-[5px]";
 
+const MAX_PRODUCT_IMAGES = 5;
+
 function generateSlug(value: string) {
   return value
     .toLowerCase()
@@ -62,6 +63,34 @@ function generateSlug(value: string) {
     .replace(/[^a-z0-9\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-");
+}
+
+function generateMetaTitle(value: string) {
+  const cleanedValue = value.trim();
+  return cleanedValue ? `${cleanedValue} | La Pistaccheria` : "";
+}
+
+function generateMetaDescription(
+  name: string,
+  shortDescription: string,
+  description: string
+) {
+  const source = shortDescription.trim() || description.trim() || name.trim();
+  return source.slice(0, 160);
+}
+
+function parseGalleryUrls(rawValue: string) {
+  return rawValue
+    .split("\n")
+    .map(value => value.trim())
+    .filter(Boolean);
+}
+
+function parseProductImages(imageUrl: string, galleryUrls: string) {
+  const images = [imageUrl.trim(), ...parseGalleryUrls(galleryUrls)].filter(
+    Boolean
+  );
+  return Array.from(new Set(images));
 }
 
 export default function ProductForm({
@@ -88,6 +117,13 @@ export default function ProductForm({
   );
   const legacyCategoryOption =
     initialCategory && !hasCategoryMatch ? initialCategory : "";
+  const initialGalleryUrlsText = Array.isArray(initialData?.gallery_urls)
+    ? initialData.gallery_urls.join("\n")
+    : "";
+  const initialProductImages = parseProductImages(
+    initialData?.image_url ?? "",
+    initialGalleryUrlsText
+  );
 
   const [form, setForm] = useState<ProductFormValues>({
     name: initialData?.name ?? "",
@@ -106,57 +142,95 @@ export default function ProductForm({
         : "0",
     meta_title: initialData?.meta_title ?? "",
     meta_description: initialData?.meta_description ?? "",
-    gallery_urls: Array.isArray(initialData?.gallery_urls)
-      ? initialData.gallery_urls.join("\n")
-      : ""
+    gallery_urls: initialGalleryUrlsText
   });
 
-  const [slugTouched, setSlugTouched] = useState(!!initialData?.slug);
   const [formErrors, setFormErrors] = useState<ProductFormErrors>({
     name: "",
-    slug: "",
     category: "",
     price: "",
     short_description: "",
     description: ""
   });
-  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
-  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
-  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [mediaError, setMediaError] = useState<string | null>(null);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [productImages, setProductImages] =
+    useState<string[]>(initialProductImages);
+  const [coverImageUrl, setCoverImageUrl] = useState<string>(() => {
+    const initialImages = initialProductImages;
+
+    if (
+      initialData?.image_url &&
+      initialImages.includes(initialData.image_url)
+    ) {
+      return initialData.image_url;
+    }
+
+    return initialImages[0] ?? "";
+  });
+  const originalProductImagesRef = useRef<string[]>(initialProductImages);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const nameFieldRef = useRef<HTMLInputElement | null>(null);
-  const slugFieldRef = useRef<HTMLInputElement | null>(null);
   const categoryFieldRef = useRef<HTMLSelectElement | null>(null);
   const priceFieldRef = useRef<HTMLInputElement | null>(null);
   const shortDescriptionFieldRef = useRef<HTMLTextAreaElement | null>(null);
   const descriptionFieldRef = useRef<HTMLTextAreaElement | null>(null);
+  const isEditMode = Boolean(initialData?.id);
+  const currentSlug = generateSlug(form.name.trim()) || form.slug.trim();
+  const publicProductLink = currentSlug
+    ? `https://lapistaccheria.leandrom.com.br/produtos/${currentSlug}`
+    : "";
+  const safeCoverImageUrl =
+    coverImageUrl && productImages.includes(coverImageUrl)
+      ? coverImageUrl
+      : (productImages[0] ?? "");
+
+  const cleanupRemovedImages = useCallback(
+    async (removedImageUrls: string[], excludeProductId?: string) => {
+      const results = await Promise.allSettled(
+        removedImageUrls.map(publicUrl =>
+          deleteUploadedMediaAsset({
+            publicUrl,
+            excludeProductId
+          })
+        )
+      );
+
+      const hasUnexpectedError = results.some(result => {
+        if (result.status === "rejected") {
+          return true;
+        }
+
+        return !isDeleteUploadedMediaAssetSuccessful(result.value);
+      });
+
+      if (hasUnexpectedError) {
+        toast.warning(
+          "Produto salvo, mas não foi possível remover uma imagem antiga do armazenamento."
+        );
+      }
+    },
+    []
+  );
 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     const name = e.target.value;
     const trimmedName = name.trim();
 
     if (trimmedName.length > 0) {
-      setFormErrors(prev => ({ ...prev, name: "", slug: prev.slug }));
+      setFormErrors(prev => ({ ...prev, name: "" }));
     }
 
     setForm(prev => ({
       ...prev,
       name,
-      slug: slugTouched ? prev.slug : generateSlug(name)
+      slug: generateSlug(name),
+      meta_title: generateMetaTitle(name),
+      meta_description: generateMetaDescription(
+        name,
+        prev.short_description,
+        prev.description
+      )
     }));
-  }
-
-  function handleSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSlugTouched(true);
-    const slug = e.target.value;
-
-    if (slug.trim().length > 0) {
-      setFormErrors(prev => ({ ...prev, slug: "" }));
-    }
-
-    setForm(prev => ({ ...prev, slug: e.target.value }));
   }
 
   function handleChange(
@@ -179,7 +253,20 @@ export default function ProductForm({
         setFormErrors(prev => ({ ...prev, description: "" }));
       }
 
-      setForm(prev => ({ ...prev, [name]: value }));
+      setForm(prev => ({
+        ...prev,
+        [name]: value,
+        meta_description:
+          name === "short_description"
+            ? generateMetaDescription(prev.name, value, prev.description)
+            : name === "description"
+              ? generateMetaDescription(
+                  prev.name,
+                  prev.short_description,
+                  value
+                )
+              : prev.meta_description
+      }));
     }
   }
 
@@ -236,16 +323,16 @@ export default function ProductForm({
 
     const nextErrors: ProductFormErrors = {
       name: trimmedName.length > 0 ? "" : "Informe o nome do produto.",
-      slug: form.slug.trim().length > 0 ? "" : "Informe o slug do produto.",
       category:
         trimmedCategoryId.length > 0 || trimmedCategory.length > 0
           ? ""
           : "Selecione uma categoria.",
       price:
-        trimmedPrice.length > 0 && Number.isFinite(parsedPrice) && parsedPrice > 0
+        trimmedPrice.length > 0 &&
+        Number.isFinite(parsedPrice) &&
+        parsedPrice > 0
           ? ""
-          : "Informe um preço maior que zero."
-      ,
+          : "Informe um preço maior que zero.",
       short_description:
         trimmedShortDescription.length > 0
           ? ""
@@ -260,7 +347,6 @@ export default function ProductForm({
 
     const firstInvalidField =
       (nextErrors.name && "name") ||
-      (nextErrors.slug && "slug") ||
       (nextErrors.category && "category") ||
       (nextErrors.price && "price") ||
       (nextErrors.short_description && "short_description") ||
@@ -271,7 +357,6 @@ export default function ProductForm({
       window.requestAnimationFrame(() => {
         const fieldMap = {
           name: nameFieldRef,
-          slug: slugFieldRef,
           category: categoryFieldRef,
           price: priceFieldRef,
           short_description: shortDescriptionFieldRef,
@@ -287,81 +372,156 @@ export default function ProductForm({
       return;
     }
 
-    await onSubmit({
+    const nextSlug = generateSlug(trimmedName);
+    const nextMetaTitle = generateMetaTitle(trimmedName);
+    const nextMetaDescription = generateMetaDescription(
+      trimmedName,
+      trimmedShortDescription,
+      trimmedDescription
+    );
+
+    const finalProductImages = [
+      safeCoverImageUrl,
+      ...productImages.filter(url => url !== safeCoverImageUrl)
+    ].filter(Boolean);
+
+    const saveSucceeded = await onSubmit({
       ...form,
       name: trimmedName,
+      slug: nextSlug,
       price: trimmedPrice,
+      image_url: safeCoverImageUrl,
+      gallery_urls: finalProductImages.slice(1).join("\n"),
+      meta_title: nextMetaTitle,
+      meta_description: nextMetaDescription
     });
-  }
 
-  const handleOpenMediaModal = useCallback(async () => {
-    setIsMediaModalOpen(true);
-    setIsLoadingMedia(true);
-    setMediaError(null);
-
-    const { data, error: queryError } = await getMediaAssets();
-
-    if (queryError) {
-      setMediaAssets([]);
-      setMediaError(
-        queryError.message || "Erro ao carregar a biblioteca de mídia."
-      );
-      setIsLoadingMedia(false);
+    if (!saveSucceeded) {
       return;
     }
 
-    setMediaAssets((data ?? []) as MediaAsset[]);
-    setIsLoadingMedia(false);
+    const removedImages = originalProductImagesRef.current.filter(
+      originalUrl => !finalProductImages.includes(originalUrl)
+    );
+
+    originalProductImagesRef.current = finalProductImages;
+
+    if (removedImages.length > 0) {
+      void cleanupRemovedImages(
+        removedImages,
+        typeof initialData?.id === "string" ? initialData.id : undefined
+      );
+    }
+  }
+
+  const handleRemoveImageAt = useCallback((indexToRemove: number) => {
+    setProductImages(prev => {
+      const nextImages = prev.filter((_, index) => index !== indexToRemove);
+
+      setCoverImageUrl(currentCover => {
+        if (currentCover && nextImages.includes(currentCover)) {
+          return currentCover;
+        }
+
+        return nextImages[0] ?? "";
+      });
+
+      return nextImages;
+    });
   }, []);
 
-  const handleSelectMediaAsset = useCallback((asset: MediaAsset) => {
-    setForm(prev => ({
-      ...prev,
-      image_url: asset.public_url
-    }));
-    setIsMediaModalOpen(false);
-  }, []);
+  const handleSetPrimaryImage = useCallback(
+    (indexToPromote: number) => {
+      if (indexToPromote <= 0) {
+        return;
+      }
 
-  const handleClearSelectedImage = useCallback(() => {
-    setForm(prev => ({
-      ...prev,
-      image_url: ""
-    }));
-  }, []);
+      const selectedImage = productImages[indexToPromote];
+
+      if (!selectedImage) {
+        return;
+      }
+
+      setCoverImageUrl(selectedImage);
+    },
+    [productImages]
+  );
 
   const handleUploadImageClick = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
-  const handleUploadImageChange = useCallback(
+  const handleUploadImagesChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
+      const files = Array.from(event.target.files ?? []);
       event.target.value = "";
 
-      if (!file) {
+      if (files.length === 0) {
         return;
       }
 
+      const currentImages = productImages;
+
+      if (currentImages.length >= MAX_PRODUCT_IMAGES) {
+        toast.error(
+          "Você já anexou 5 imagens. Remova uma para adicionar outra."
+        );
+        return;
+      }
+
+      const availableSlots = MAX_PRODUCT_IMAGES - currentImages.length;
+      const filesToUpload = files.slice(0, availableSlots);
+
+      if (files.length > availableSlots) {
+        toast.info(
+          "Só foi possível enviar parte dos arquivos. Limite de 5 imagens por produto."
+        );
+      }
+
       try {
-        setIsUploadingImage(true);
-        const uploadedAsset = await uploadMediaAsset(file, "products");
-        setForm(prev => ({
-          ...prev,
-          image_url: uploadedAsset.public_url
-        }));
-        toast.success("Imagem enviada com sucesso.");
+        setIsUploadingImages(true);
+        const uploadedAssets = await Promise.all(
+          filesToUpload.map(file => uploadMediaAsset(file, "products"))
+        );
+
+        const uploadedUrls = uploadedAssets.map(asset => asset.public_url);
+
+        setProductImages(prev => {
+          const nextImages = Array.from(
+            new Set([...prev, ...uploadedUrls])
+          ).slice(0, MAX_PRODUCT_IMAGES);
+
+          setCoverImageUrl(currentCover => currentCover || nextImages[0] || "");
+
+          return nextImages;
+        });
+        toast.success("Imagem(ns) enviada(s) com sucesso.");
       } catch (uploadError) {
         toast.error(
           uploadError instanceof Error
             ? uploadError.message
-            : "Erro ao enviar imagem."
+            : "Erro ao enviar imagens."
         );
       } finally {
-        setIsUploadingImage(false);
+        setIsUploadingImages(false);
       }
     },
-    []
+    [productImages]
   );
+
+  const handleCopyPublicLink = useCallback(async () => {
+    if (!publicProductLink) {
+      toast.error("Preencha o nome para gerar o link do produto.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(publicProductLink);
+      toast.success("Link do produto copiado.");
+    } catch {
+      toast.error("Não foi possível copiar o link.");
+    }
+  }, [publicProductLink]);
 
   return (
     <form id={id} onSubmit={handleSubmit} noValidate>
@@ -369,18 +529,18 @@ export default function ProductForm({
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/gif"
+        multiple
         className="hidden"
-        onChange={event => void handleUploadImageChange(event)}
+        onChange={event => void handleUploadImagesChange(event)}
       />
 
       {error && (
-        <div className="mb-6 border border-[#E0C8C8] bg-[#FBF2F2] text-[#8A3A3A] px-4 py-3 text-[13px]">
+        <div className="mb-6 border border-[#E0C8C8] bg-[#FBF2F2] px-4 py-3 text-[13px] font-semibold text-[#A63A3A]">
           {error}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-        {/* Nome */}
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
         <div className="md:col-span-2">
           <label htmlFor="pf-name" className={labelClass}>
             Nome <span className="text-[#8A3A3A]">*</span>
@@ -404,31 +564,6 @@ export default function ProductForm({
           )}
         </div>
 
-        {/* Slug */}
-        <div>
-          <label htmlFor="pf-slug" className={labelClass}>
-            Slug <span className="text-[#8A3A3A]">*</span>
-          </label>
-          <input
-            ref={slugFieldRef}
-            id="pf-slug"
-            name="slug"
-            type="text"
-            value={form.slug}
-            onChange={handleSlugChange}
-            required
-            autoComplete="off"
-            aria-invalid={!!formErrors.slug}
-            className={`${inputClass} ${formErrors.slug ? "border-[#C98B8B] focus:border-[#A45858] focus:ring-[#A45858]/20" : ""}`}
-          />
-          {formErrors.slug && (
-            <p className="mt-1.5 text-[11px] font-semibold text-[#A63A3A]">
-              {formErrors.slug}
-            </p>
-          )}
-        </div>
-
-        {/* Categoria */}
         <div>
           <label htmlFor="pf-category" className={labelClass}>
             Categoria <span className="text-[#8A3A3A]">*</span>
@@ -464,7 +599,7 @@ export default function ProductForm({
             )}
           </select>
           {legacyCategoryOption && !form.category_id && (
-            <p className="text-[10px] text-[#8A3A3A] mt-1">
+            <p className="mt-1 text-[10px] text-[#8A3A3A]">
               Categoria legada sem correspondencia ativa. Salve para manter
               compatibilidade temporaria.
             </p>
@@ -477,14 +612,13 @@ export default function ProductForm({
           {form.category_id &&
             categories.find(c => c.id === form.category_id)?.active ===
               false && (
-              <p className="text-[10px] text-[#9A5A20] mt-1">
+              <p className="mt-1 text-[10px] text-[#9A5A20]">
                 Esta categoria está inativa. Este produto não aparece no site
                 público.
               </p>
             )}
         </div>
 
-        {/* Preço */}
         <div>
           <label htmlFor="pf-price" className={labelClass}>
             Preço (R$) <span className="text-[#8A3A3A]">*</span>
@@ -509,59 +643,109 @@ export default function ProductForm({
           )}
         </div>
 
-        {/* Imagem principal */}
-        <div>
-          <label className={labelClass}>Imagem principal</label>
-          <input type="hidden" name="image_url" value={form.image_url} />
-          <div className="flex items-center gap-2.5">
+        <div className="md:col-span-2">
+          <label className={labelClass}>Imagens do produto</label>
+          <input type="hidden" name="image_url" value={safeCoverImageUrl} />
+          <input
+            type="hidden"
+            name="gallery_urls"
+            value={productImages
+              .filter(url => url !== safeCoverImageUrl)
+              .join("\n")}
+          />
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               onClick={handleUploadImageClick}
-              disabled={isUploadingImage}
-              className="inline-flex h-12 items-center justify-center rounded-[5px] border border-[#DDD8D0] bg-white px-4 text-[12px] font-medium text-[#2A3D20] transition-colors hover:bg-[#F5F1EA]">
-              {isUploadingImage ? "Enviando imagem..." : "Enviar imagem"}
+              disabled={
+                isUploadingImages || productImages.length >= MAX_PRODUCT_IMAGES
+              }
+              className="inline-flex h-12 items-center justify-center rounded-[5px] border border-[#2A3D20] bg-[#2A3D20] px-4 text-[12px] font-semibold text-white transition-colors hover:bg-[#223219] disabled:cursor-not-allowed disabled:opacity-60">
+              {isUploadingImages ? "Enviando imagens..." : "Enviar imagens"}
             </button>
-            <button
-              type="button"
-              onClick={() => void handleOpenMediaModal()}
-              className="inline-flex h-12 items-center justify-center rounded-[5px] border border-[#DDD8D0] bg-white px-4 text-[12px] font-medium text-[#5F5751] transition-colors hover:bg-[#F5F1EA]">
-              Selecionar da Biblioteca
-            </button>
-            {form.image_url ? (
-              <button
-                type="button"
-                onClick={handleClearSelectedImage}
-                className="inline-flex h-12 items-center justify-center rounded-[5px] border border-[#E0C8C8] bg-[#FBF2F2] px-4 text-[12px] font-medium text-[#8A3A3A] transition-colors hover:bg-[#F8E7E7]">
-                Remover
-              </button>
-            ) : null}
+            <span className="text-[11px] text-[#7A716A]">
+              {productImages.length}/{MAX_PRODUCT_IMAGES} imagens anexadas
+            </span>
           </div>
-          {form.image_url ? (
-            <p className="mt-2 break-all text-[11px] text-[#7A716A]">
-              {form.image_url}
-            </p>
-          ) : (
-            <p className="mt-2 text-[11px] text-[#9A9189]">
-              Nenhuma imagem selecionada.
+
+          {productImages.length >= MAX_PRODUCT_IMAGES && (
+            <p className="mt-2 text-[11px] font-medium text-[#8A3A3A]">
+              Limite de 5 imagens atingido. Remova uma imagem para adicionar
+              outra.
             </p>
           )}
-          {form.image_url && (
-            <div
-              className="mt-3 border border-[#E5E0D8] bg-[#F7F5F2] p-2 rounded-[5px] overflow-hidden"
-              style={{ maxWidth: 160 }}>
-              <img
-                src={form.image_url}
-                alt="Preview"
-                className="w-full h-auto object-cover rounded-[3px]"
-                onError={e => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
+
+          {productImages.length > 0 ? (
+            <div className="mt-3 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {productImages.map((url, index) => (
+                <div
+                  key={`${url}-${index}`}
+                  className="flex min-h-[160px] flex-col overflow-hidden rounded-[8px] border border-[#E5E0D8] bg-[#F7F5F2] p-2">
+                  <div className="h-[120px] overflow-hidden rounded-[6px] bg-white sm:h-[130px]">
+                    <img
+                      src={url}
+                      alt={
+                        index === 0 ? "Imagem principal" : "Imagem do produto"
+                      }
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <p className="mt-2 whitespace-nowrap text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-[#5F5751]">
+                    {url === safeCoverImageUrl
+                      ? "Capa do produto"
+                      : "Foto do produto"}
+                  </p>
+                  {url !== safeCoverImageUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => handleSetPrimaryImage(index)}
+                      className="mt-2 w-full rounded-[5px] border border-[#D6DCCF] bg-white px-2 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[#2A3D20] transition-colors hover:bg-[#F1F4EC]">
+                      Usar como capa
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImageAt(index)}
+                    className="mt-2 w-full rounded-[5px] border border-[#E0C8C8] bg-[#FBF2F2] px-2 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[#8A3A3A] transition-colors hover:bg-[#F8E7E7]">
+                    Remover
+                  </button>
+                </div>
+              ))}
             </div>
+          ) : (
+            <p className="mt-2 text-[11px] text-[#9A9189]">
+              Nenhuma imagem anexada.
+            </p>
           )}
         </div>
 
-        {/* Descrição curta */}
+        {isEditMode ? (
+          <div className="md:col-span-2 rounded-[10px] border border-[#E5E0D8] bg-[#FAF8F5] p-4">
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] font-medium tracking-[0.08em] uppercase text-[#5F5751]">
+                Link do produto
+              </span>
+              <input
+                type="text"
+                readOnly
+                value={publicProductLink}
+                placeholder="Preencha o nome para gerar o link público."
+                className={inputClass}
+              />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void handleCopyPublicLink()}
+                disabled={!publicProductLink}
+                className="inline-flex h-11 items-center justify-center rounded-[5px] border border-[#DDD8D0] bg-white px-4 text-[12px] font-medium text-[#2A3D20] transition-colors hover:bg-[#F5F1EA] disabled:cursor-not-allowed disabled:opacity-50">
+                Copiar link
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <div className="md:col-span-2">
           <label htmlFor="pf-short_description" className={labelClass}>
             Descrição Curta <span className="text-[#8A3A3A]">*</span>
@@ -584,7 +768,6 @@ export default function ProductForm({
           )}
         </div>
 
-        {/* Descrição completa */}
         <div className="md:col-span-2">
           <label htmlFor="pf-description" className={labelClass}>
             Descrição Completa <span className="text-[#8A3A3A]">*</span>
@@ -607,106 +790,27 @@ export default function ProductForm({
           )}
         </div>
 
-        {/* Meta Title */}
-        <div className="md:col-span-2">
-          <label htmlFor="pf-meta_title" className={labelClass}>
-            Meta Title (SEO)
-          </label>
-          <input
-            id="pf-meta_title"
-            name="meta_title"
-            type="text"
-            value={form.meta_title}
-            onChange={handleChange}
-            autoComplete="off"
-            placeholder="Título para mecanismos de busca (opcional)"
-            className={inputClass}
-          />
-          <p className="text-[10px] text-warm-gray/60 mt-1">
-            Máximo 60 caracteres
-          </p>
-        </div>
-
-        {/* Meta Description */}
-        <div className="md:col-span-2">
-          <label htmlFor="pf-meta_description" className={labelClass}>
-            Meta Description (SEO)
-          </label>
-          <textarea
-            id="pf-meta_description"
-            name="meta_description"
-            value={form.meta_description}
-            onChange={handleChange}
-            rows={2}
-            placeholder="Descrição para mecanismos de busca (opcional)"
-            className={textareaClass}
-          />
-          <p className="text-[10px] text-warm-gray/60 mt-1">
-            Máximo 160 caracteres
-          </p>
-        </div>
-
-        {/* Display Order */}
-        <div>
-          <label htmlFor="pf-display_order" className={labelClass}>
-            Ordem de Exibição
-          </label>
-          <input
-            id="pf-display_order"
-            name="display_order"
-            type="number"
-            value={form.display_order}
-            onChange={handleChange}
-            min="0"
-            step="1"
-            className={inputClass}
-          />
-          <p className="text-[10px] text-warm-gray/60 mt-1">
-            Menor = primeiro na loja
-          </p>
-        </div>
-
-        {/* Gallery URLs */}
-        <div className="md:col-span-2">
-          <label htmlFor="pf-gallery_urls" className={labelClass}>
-            URLs da Galeria
-          </label>
-          <textarea
-            id="pf-gallery_urls"
-            name="gallery_urls"
-            value={form.gallery_urls}
-            onChange={handleChange}
-            rows={3}
-            placeholder="Uma URL por linha (opcional)"
-            className={textareaClass}
-          />
-          <p className="text-[10px] text-warm-gray/60 mt-1">
-            URLs públicas separadas por quebra de linha
-          </p>
-        </div>
-
-        {/* Checkboxes */}
         <div className="md:col-span-2 flex gap-8 pt-1">
-          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+          <label className="flex cursor-pointer select-none items-center gap-2.5">
             <input
               type="checkbox"
               name="active"
               checked={form.active}
               onChange={handleChange}
-              className="w-4 h-4 border border-cream-deep accent-pistachio"
+              className="h-4 w-4 border border-cream-deep accent-pistachio"
             />
             <span className="text-[11px] tracking-[0.12em] uppercase text-warm-gray">
               Ativo
             </span>
           </label>
 
-          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+          <label className="flex cursor-pointer select-none items-center gap-2.5">
             <input
               type="checkbox"
               name="featured"
               checked={form.featured}
               onChange={handleChange}
-              className="w-4 h-4 border border-cream-deep accent-pistachio"
+              className="h-4 w-4 border border-cream-deep accent-pistachio"
             />
             <span className="text-[11px] tracking-[0.12em] uppercase text-warm-gray">
               Destaque
@@ -715,89 +819,23 @@ export default function ProductForm({
         </div>
       </div>
 
-      {/* Ações */}
-      {!hideActions && (
-        <div className="flex gap-3 mt-8 pt-6 border-t border-cream-deep">
+      {hideActions ? null : (
+        <div className="mt-8 flex gap-3 border-t border-cream-deep pt-6">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-7 h-11 bg-charcoal text-cream text-[10px] tracking-[0.2em] uppercase hover:bg-charcoal/85 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            className="h-11 bg-charcoal px-7 text-[10px] uppercase tracking-[0.2em] text-cream transition-colors hover:bg-charcoal/85 disabled:cursor-not-allowed disabled:opacity-50">
             {isSubmitting ? "Salvando…" : submitLabel}
           </button>
           <button
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="px-6 h-11 border border-cream-deep text-[10px] tracking-[0.2em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 disabled:opacity-50 transition-colors">
+            className="h-11 border border-cream-deep px-6 text-[10px] uppercase tracking-[0.2em] text-warm-gray transition-colors hover:border-charcoal/35 hover:text-charcoal disabled:opacity-50">
             Cancelar
           </button>
         </div>
       )}
-
-      {isMediaModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 px-4 py-6">
-          <div className="w-full max-w-[900px] rounded-[14px] border border-[#E2DBD2] bg-white shadow-[0_30px_80px_rgba(31,30,28,0.22)]">
-            <div className="flex items-center justify-between border-b border-[#EEE8DF] px-5 py-4">
-              <div>
-                <h3 className="text-[1.1rem] font-semibold text-[#1C1C1A]">
-                  Biblioteca de Mídia
-                </h3>
-                <p className="mt-1 text-[12px] text-[#7A716A]">
-                  Selecione uma imagem para preencher a imagem principal do
-                  produto.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsMediaModalOpen(false)}
-                className="inline-flex h-9 items-center justify-center rounded-full border border-[#D7D0C4] bg-white px-4 text-[11px] font-medium uppercase tracking-[0.08em] text-[#5F5751] transition-colors hover:bg-[#F5F1EA]">
-                Fechar
-              </button>
-            </div>
-
-            <div className="max-h-[68vh] overflow-auto px-5 py-4">
-              {isLoadingMedia ? (
-                <div className="py-10 text-center text-[13px] text-[#7A716A]">
-                  Carregando biblioteca...
-                </div>
-              ) : mediaError ? (
-                <div className="rounded-[10px] border border-[#E0C8C8] bg-[#FBF2F2] px-4 py-3 text-[13px] text-[#8A3A3A]">
-                  {mediaError}
-                </div>
-              ) : mediaAssets.length === 0 ? (
-                <div className="py-10 text-center text-[13px] text-[#7A716A]">
-                  Nenhuma imagem disponível.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {mediaAssets.map(asset => (
-                    <button
-                      key={asset.id}
-                      type="button"
-                      onClick={() => handleSelectMediaAsset(asset)}
-                      className="rounded-[10px] border border-[#E7E1D8] bg-[#FCFBF9] p-2 text-left transition-colors hover:border-[#CFC4B5]">
-                      <div className="h-36 w-full overflow-hidden rounded-[8px] border border-[#E9E3DB] bg-[#F2EEE8]">
-                        <img
-                          src={asset.public_url}
-                          alt={asset.file_name || "Imagem"}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                      <p className="mt-2 truncate text-[12px] font-medium text-[#1C1C1A]">
-                        {asset.file_name || "Arquivo sem nome"}
-                      </p>
-                      <p className="mt-1 truncate text-[11px] text-[#7A716A]">
-                        {asset.public_url}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </form>
   );
 }

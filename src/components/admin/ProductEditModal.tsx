@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import ProductForm, { type ProductFormValues } from "../../pages/admin/ProductForm";
+import { useEffect } from "react";
+import ProductForm, {
+  type ProductFormValues
+} from "../../pages/admin/ProductForm";
 import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 
 interface ProductEditModalProps {
@@ -7,17 +9,10 @@ interface ProductEditModalProps {
   product: DatabaseProduct | null;
   isSubmitting: boolean;
   submitError: string | null;
-  onSubmit: (values: ProductFormValues) => Promise<void>;
+  onSubmit: (values: ProductFormValues) => Promise<boolean>;
   onClose: () => void;
   categories: DatabaseCategory[];
 }
-
-type ModalTab = "geral" | "seo";
-
-const TABS: Array<{ id: ModalTab; label: string; fieldId: string }> = [
-  { id: "geral", label: "Geral", fieldId: "pf-name" },
-  { id: "seo", label: "SEO", fieldId: "pf-meta_title" },
-];
 
 const FORM_ID = "modal-product-form";
 
@@ -28,10 +23,8 @@ export default function ProductEditModal({
   submitError,
   onSubmit,
   onClose,
-  categories,
+  categories
 }: ProductEditModalProps) {
-  const [activeTab, setActiveTab] = useState<ModalTab>("geral");
-
   // Fechar com Escape
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -44,33 +37,26 @@ export default function ProductEditModal({
   // Bloquear scroll do body enquanto modal está aberto
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, []);
-
-  function handleTabChange(tab: ModalTab) {
-    setActiveTab(tab);
-    const fieldId = TABS.find((t) => t.id === tab)?.fieldId;
-    if (!fieldId) return;
-    requestAnimationFrame(() => {
-      document.getElementById(fieldId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }
 
   return (
     /* Overlay */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
       style={{ background: "rgba(28,28,26,0.55)", backdropFilter: "blur(2px)" }}
-      onClick={(e) => { if (e.target === e.currentTarget && !isSubmitting) onClose(); }}
-    >
+      onClick={e => {
+        if (e.target === e.currentTarget && !isSubmitting) onClose();
+      }}>
       {/* Modal */}
       <div
         className="relative w-full flex flex-col bg-white rounded-[8px] shadow-2xl"
         style={{ maxWidth: 720, maxHeight: "calc(100vh - 64px)" }}
         role="dialog"
         aria-modal="true"
-        aria-label={mode === "create" ? "Novo produto" : "Editar produto"}
-      >
+        aria-label={mode === "create" ? "Novo produto" : "Editar produto"}>
         {/* Header */}
         <div className="flex items-center justify-between px-7 pt-6 pb-5 border-b border-[#ECEAE5] shrink-0">
           <div>
@@ -78,7 +64,9 @@ export default function ProductEditModal({
               {mode === "create" ? "Criar produto" : "Editar produto"}
             </p>
             <h2 className="text-[1.2rem] font-semibold text-[#1C1C1A] leading-tight">
-              {mode === "create" ? "Novo produto" : product?.name || "Editar produto"}
+              {mode === "create"
+                ? "Novo produto"
+                : product?.name || "Editar produto"}
             </h2>
           </div>
           <button
@@ -86,28 +74,9 @@ export default function ProductEditModal({
             onClick={onClose}
             disabled={isSubmitting}
             className="w-8 h-8 flex items-center justify-center text-[#9A9189] hover:text-[#1C1C1A] hover:bg-[#F4F2EE] rounded-full transition-colors disabled:opacity-40 text-[22px] leading-none"
-            aria-label="Fechar"
-          >
+            aria-label="Fechar">
             ×
           </button>
-        </div>
-
-        {/* Abas */}
-        <div className="flex items-center gap-0 px-7 border-b border-[#ECEAE5] shrink-0">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => handleTabChange(tab.id)}
-              className={`h-11 px-4 text-[13px] border-b-[2px] -mb-px transition-colors ${
-                activeTab === tab.id
-                  ? "border-[#3A4D2C] text-[#3A4D2C] font-medium"
-                  : "border-transparent text-[#7A716A] hover:text-[#1C1C1A]"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
         </div>
 
         {/* Corpo rolável */}
@@ -123,7 +92,9 @@ export default function ProductEditModal({
             initialData={product || undefined}
             onSubmit={onSubmit}
             isSubmitting={isSubmitting}
-            submitLabel={mode === "create" ? "Criar produto" : "Salvar alterações"}
+            submitLabel={
+              mode === "create" ? "Criar produto" : "Salvar alterações"
+            }
             onCancel={onClose}
             error={null}
             hideActions
@@ -137,8 +108,7 @@ export default function ProductEditModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="h-10 px-5 border border-[#D5CFC8] text-[13px] text-[#5F5751] hover:text-[#1C1C1A] hover:border-[#9A9189] disabled:opacity-50 transition-colors rounded-[5px]"
-          >
+            className="h-10 px-5 border border-[#D5CFC8] text-[13px] text-[#5F5751] hover:text-[#1C1C1A] hover:border-[#9A9189] disabled:opacity-50 transition-colors rounded-[5px]">
             Cancelar
           </button>
           <button
@@ -146,9 +116,12 @@ export default function ProductEditModal({
             form={FORM_ID}
             disabled={isSubmitting}
             className="h-10 px-6 text-[13px] font-medium text-white disabled:opacity-60 transition-opacity rounded-[5px]"
-            style={{ background: "#2A3D20" }}
-          >
-            {isSubmitting ? "Salvando…" : mode === "create" ? "Criar produto" : "Salvar alterações"}
+            style={{ background: "#2A3D20" }}>
+            {isSubmitting
+              ? "Salvando…"
+              : mode === "create"
+                ? "Criar produto"
+                : "Salvar alterações"}
           </button>
         </div>
       </div>

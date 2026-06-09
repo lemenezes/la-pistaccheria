@@ -6,7 +6,7 @@ import {
   createProduct,
   getCategories,
   getProducts,
-  updateProduct,
+  updateProduct
 } from "../../lib/supabase";
 import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 import type { ProductFormValues } from "../../pages/admin/ProductForm";
@@ -15,7 +15,7 @@ import AdminSidebar from "./AdminSidebar";
 import ProductList from "./ProductList";
 import ProductListToolbar, {
   type ProductFilter,
-  type SortOption,
+  type SortOption
 } from "./ProductListToolbar";
 import ProductPreviewPanel from "./ProductPreviewPanel";
 import ProductEditModal from "./ProductEditModal";
@@ -34,7 +34,9 @@ export default function ProductWorkspace() {
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null
+  );
   const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -97,14 +99,12 @@ export default function ProductWorkspace() {
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    const filtered = products.filter((product) => {
+    const filtered = products.filter(product => {
       const linkedCategory = product.category_id
-        ? categories.find((category) => category.id === product.category_id)
+        ? categories.find(category => category.id === product.category_id)
         : null;
       const isHiddenByInactiveCategory =
-        product.active &&
-        !!linkedCategory &&
-        linkedCategory.active === false;
+        product.active && !!linkedCategory && linkedCategory.active === false;
 
       const matchesFilter =
         filter === "all" ||
@@ -114,7 +114,11 @@ export default function ProductWorkspace() {
         (filter === "hidden" && isHiddenByInactiveCategory);
 
       if (!matchesFilter) return false;
-      if (categoryFilters.length > 0 && !categoryFilters.includes(product.category)) return false;
+      if (
+        categoryFilters.length > 0 &&
+        !categoryFilters.includes(product.category)
+      )
+        return false;
       if (!normalizedQuery) return true;
 
       return (
@@ -128,7 +132,9 @@ export default function ProductWorkspace() {
       switch (sortBy) {
         case "default":
         case "newest":
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
         case "name_asc":
           return a.name.localeCompare(b.name, "pt-BR");
         case "name_desc":
@@ -149,7 +155,10 @@ export default function ProductWorkspace() {
   const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
   const safePage = Math.min(page, totalPages);
   const pageStart = (safePage - 1) * perPage;
-  const paginatedProducts = filteredProducts.slice(pageStart, pageStart + perPage);
+  const paginatedProducts = filteredProducts.slice(
+    pageStart,
+    pageStart + perPage
+  );
 
   // Reset para página 1 quando qualquer filtro muda
   useEffect(() => {
@@ -158,8 +167,8 @@ export default function ProductWorkspace() {
 
   const selectedProduct = useMemo(
     () =>
-      filteredProducts.find((product) => product.id === selectedProductId) ||
-      products.find((product) => product.id === selectedProductId) ||
+      filteredProducts.find(product => product.id === selectedProductId) ||
+      products.find(product => product.id === selectedProductId) ||
       null,
     [filteredProducts, products, selectedProductId]
   );
@@ -167,8 +176,8 @@ export default function ProductWorkspace() {
   function mapFormValues(values: ProductFormValues) {
     const galleryUrls = values.gallery_urls
       .split("\n")
-      .map((url) => url.trim())
-      .filter((url) => url.length > 0);
+      .map(url => url.trim())
+      .filter(url => url.length > 0);
 
     return {
       name: values.name,
@@ -184,11 +193,11 @@ export default function ProductWorkspace() {
       display_order: parseInt(values.display_order, 10) || 0,
       meta_title: values.meta_title || null,
       meta_description: values.meta_description || null,
-      gallery_urls: galleryUrls,
+      gallery_urls: galleryUrls
     };
   }
 
-  async function handleSubmit(values: ProductFormValues) {
+  async function handleSubmit(values: ProductFormValues): Promise<boolean> {
     setIsSubmitting(true);
 
     try {
@@ -198,43 +207,48 @@ export default function ProductWorkspace() {
         const { data, error: apiError } = await createProduct({
           ...payload,
           weight: null,
-          badge: null,
+          badge: null
         });
 
         if (apiError || !data) {
           toast.error(apiError?.message || "Erro ao criar produto.");
-          return;
+          return false;
         }
 
         const created = data as DatabaseProduct;
-        setProducts((prev) => [created, ...prev]);
+        setProducts(prev => [created, ...prev]);
         setSelectedProductId(created.id);
         setModalMode(null);
         toast.success("Produto criado com sucesso.");
-        return;
+        return true;
       }
 
       if (!selectedProductId) {
         toast.error("Selecione um produto para editar.");
-        return;
+        return false;
       }
 
-      const { data, error: apiError } = await updateProduct(selectedProductId, payload);
+      const { data, error: apiError } = await updateProduct(
+        selectedProductId,
+        payload
+      );
 
       if (apiError || !data) {
         toast.error(apiError?.message || "Erro ao atualizar produto.");
-        return;
+        return false;
       }
 
       const updated = data as DatabaseProduct;
-      setProducts((prev) =>
-        prev.map((product) => (product.id === updated.id ? updated : product))
+      setProducts(prev =>
+        prev.map(product => (product.id === updated.id ? updated : product))
       );
       setSelectedProductId(updated.id);
       setModalMode(null);
       toast.success("Produto atualizado com sucesso.");
+      return true;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro inesperado.");
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -293,18 +307,18 @@ export default function ProductWorkspace() {
               {/* Header + filtros */}
               <div className="overflow-visible rounded-[16px] md:rounded-none border border-[#E6DFD6] md:border-0 bg-white shadow-[0_2px_12px_rgba(95,87,81,0.06)] md:shadow-none">
                 <ProductListToolbar
-                      query={query}
-                      filter={filter}
-                      sortBy={sortBy}
-                      categories={categories}
-                      categoryFilters={categoryFilters}
-                      onQueryChange={setQuery}
-                      onFilterChange={setFilter}
-                      onSortChange={setSortBy}
-                      onCategoryChange={setCategoryFilters}
-                      onNewProduct={handleOpenCreate}
-                      onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
-                    />
+                  query={query}
+                  filter={filter}
+                  sortBy={sortBy}
+                  categories={categories}
+                  categoryFilters={categoryFilters}
+                  onQueryChange={setQuery}
+                  onFilterChange={setFilter}
+                  onSortChange={setSortBy}
+                  onCategoryChange={setCategoryFilters}
+                  onNewProduct={handleOpenCreate}
+                  onToggleSidebar={() => setMobileSidebarOpen(v => !v)}
+                />
               </div>
               {/* Card da lista */}
               <div className="bg-white overflow-hidden flex-1 rounded-[16px] md:rounded-none md:rounded-b-[8px] border border-[#E6DFD6] md:border-[#E5E0D8] md:border-t-0">
@@ -321,19 +335,20 @@ export default function ProductWorkspace() {
                   <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-[#F0EDE8] bg-white">
                     {totalCount <= perPage ? (
                       <span className="text-[11.5px] text-[#9A9189]">
-                        {totalCount} produto{totalCount !== 1 ? "s" : ""} cadastrado{totalCount !== 1 ? "s" : ""}
+                        {totalCount} produto{totalCount !== 1 ? "s" : ""}{" "}
+                        cadastrado{totalCount !== 1 ? "s" : ""}
                       </span>
                     ) : (
                       <>
                         <div className="flex items-center gap-2 text-[11.5px] text-[#9A9189]">
                           <span>
-                            {totalCount} produto{totalCount !== 1 ? "s" : ""} cadastrado{totalCount !== 1 ? "s" : ""}
+                            {totalCount} produto{totalCount !== 1 ? "s" : ""}{" "}
+                            cadastrado{totalCount !== 1 ? "s" : ""}
                           </span>
                           <select
                             value={perPage}
-                            onChange={(e) => setPerPage(Number(e.target.value))}
-                            className="h-7 px-1.5 text-[11.5px] border border-[#E5E0D8] rounded-md bg-white text-[#5F5751] outline-none focus:border-[#9A9189] cursor-pointer"
-                          >
+                            onChange={e => setPerPage(Number(e.target.value))}
+                            className="h-7 px-1.5 text-[11.5px] border border-[#E5E0D8] rounded-md bg-white text-[#5F5751] outline-none focus:border-[#9A9189] cursor-pointer">
                             <option value={10}>10 / pág.</option>
                             <option value={25}>25 / pág.</option>
                             <option value={50}>50 / pág.</option>
@@ -343,10 +358,9 @@ export default function ProductWorkspace() {
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={safePage <= 1}
-                            className="h-7 px-2.5 text-[12px] border border-[#E5E0D8] rounded-md text-[#5F5751] bg-white hover:bg-[#F4F2EE] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
-                          >
+                            className="h-7 px-2.5 text-[12px] border border-[#E5E0D8] rounded-md text-[#5F5751] bg-white hover:bg-[#F4F2EE] disabled:opacity-35 disabled:cursor-not-allowed transition-colors">
                             ←
                           </button>
                           <span className="h-7 px-3 flex items-center text-[12px] font-medium text-[#1C1C1A] border border-[#D8D3CC] rounded-md bg-white">
@@ -354,10 +368,11 @@ export default function ProductWorkspace() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                            onClick={() =>
+                              setPage(p => Math.min(totalPages, p + 1))
+                            }
                             disabled={safePage >= totalPages}
-                            className="h-7 px-2.5 text-[12px] border border-[#E5E0D8] rounded-md text-[#5F5751] bg-white hover:bg-[#F4F2EE] disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
-                          >
+                            className="h-7 px-2.5 text-[12px] border border-[#E5E0D8] rounded-md text-[#5F5751] bg-white hover:bg-[#F4F2EE] disabled:opacity-35 disabled:cursor-not-allowed transition-colors">
                             →
                           </button>
                         </div>
@@ -385,15 +400,15 @@ export default function ProductWorkspace() {
             <button
               type="button"
               onClick={handleCloseMobileProduct}
-              className="flex items-center gap-1.5 text-[13px] text-[#5F5751] hover:text-[#1C1C1A] transition-colors"
-            >
+              className="flex items-center gap-1.5 text-[13px] text-[#5F5751] hover:text-[#1C1C1A] transition-colors">
               <span className="text-[16px]">←</span>
               Voltar
             </button>
             <span className="flex-1 text-[13px] font-medium text-[#1C1C1A] truncate text-center">
               {selectedProduct.name}
             </span>
-            <span className="w-[52px]" />{/* spacer para centralizar o título */}
+            <span className="w-[52px]" />
+            {/* spacer para centralizar o título */}
           </div>
           {/* Conteúdo */}
           <div className="flex-1 min-h-0 overflow-y-auto">

@@ -37,7 +37,7 @@ export default function AdminProdutoNovo() {
     };
   }, []);
 
-  async function handleSubmit(values: ProductFormValues) {
+  async function handleSubmit(values: ProductFormValues): Promise<boolean> {
     setError(null);
     setIsSubmitting(true);
 
@@ -68,12 +68,14 @@ export default function AdminProdutoNovo() {
 
       if (apiError) {
         setError(apiError.message || "Erro ao criar produto.");
-        return;
+        return false;
       }
 
       navigate("/admin/produtos", { replace: true });
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro inesperado.");
+      return false;
     } finally {
       setIsSubmitting(false);
     }

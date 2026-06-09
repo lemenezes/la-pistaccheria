@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getCategories, getProductById, updateProduct } from "../../lib/supabase";
+import {
+  getCategories,
+  getProductById,
+  updateProduct
+} from "../../lib/supabase";
 import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 import ProductForm, { type ProductFormValues } from "./ProductForm";
 
@@ -72,16 +76,16 @@ export default function AdminProdutoEditar() {
     };
   }, []);
 
-  async function handleSubmit(values: ProductFormValues) {
-    if (!id) return;
+  async function handleSubmit(values: ProductFormValues): Promise<boolean> {
+    if (!id) return false;
     setSubmitError(null);
     setIsSubmitting(true);
 
     try {
       const galleryUrls = values.gallery_urls
         .split("\n")
-        .map((url) => url.trim())
-        .filter((url) => url.length > 0);
+        .map(url => url.trim())
+        .filter(url => url.length > 0);
 
       const { error: apiError } = await updateProduct(id, {
         name: values.name,
@@ -97,17 +101,19 @@ export default function AdminProdutoEditar() {
         display_order: parseInt(values.display_order) || 0,
         meta_title: values.meta_title || null,
         meta_description: values.meta_description || null,
-        gallery_urls: galleryUrls,
+        gallery_urls: galleryUrls
       });
 
       if (apiError) {
         setSubmitError(apiError.message || "Erro ao atualizar produto.");
-        return;
+        return false;
       }
 
       navigate("/admin/produtos", { replace: true });
+      return true;
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Erro inesperado.");
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -128,8 +134,7 @@ export default function AdminProdutoEditar() {
             </p>
             <h1
               className="text-[2.2rem] md:text-[2.8rem] font-light text-charcoal leading-[1.05]"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-            >
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
               {isLoading ? "Carregando…" : product ? product.name : "Produto"}
             </h1>
             <p className="text-[12px] font-light text-warm-gray mt-2">
@@ -140,8 +145,7 @@ export default function AdminProdutoEditar() {
           <button
             type="button"
             onClick={handleLogout}
-            className="self-start md:self-auto px-5 h-10 border border-cream-deep text-[10px] tracking-[0.16em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 transition-colors"
-          >
+            className="self-start md:self-auto px-5 h-10 border border-cream-deep text-[10px] tracking-[0.16em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 transition-colors">
             Sair
           </button>
         </div>
