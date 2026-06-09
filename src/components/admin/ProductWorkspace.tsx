@@ -73,6 +73,7 @@ export default function ProductWorkspace() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileProductOpen, setMobileProductOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -362,9 +363,54 @@ export default function ProductWorkspace() {
     setModalMode("edit");
   }
 
+  function handleOpenEditFromList(productId: string) {
+    setSelectedProductId(productId);
+    setModalMode("edit");
+  }
+
+  function handleOpenDeleteFromList(productId: string) {
+    setSelectedProductId(productId);
+    setIsDeleteConfirmOpen(true);
+  }
+
   function handleCloseModal() {
     setModalMode(null);
   }
+
+  function handleCloseDeleteConfirm() {
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsDeleteConfirmOpen(false);
+  }
+
+  async function handleConfirmDeleteFromList() {
+    await handleDeleteSelectedProduct();
+    setIsDeleteConfirmOpen(false);
+  }
+
+  useEffect(() => {
+    if (!isDeleteConfirmOpen) {
+      return;
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape" || isSubmitting) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      setIsDeleteConfirmOpen(false);
+    }
+
+    document.addEventListener("keydown", onKeyDown, true);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown, true);
+    };
+  }, [isDeleteConfirmOpen, isSubmitting]);
 
   function handleCloseMobileProduct() {
     setMobileProductOpen(false);
@@ -423,6 +469,8 @@ export default function ProductWorkspace() {
                   isLoading={isLoading}
                   error={error}
                   onSelectProduct={handleSelectProduct}
+                  onEditProduct={handleOpenEditFromList}
+                  onDeleteProduct={handleOpenDeleteFromList}
                 />
                 {/* Rodapé de paginação */}
                 {!isLoading && totalCount > 0 && (
@@ -478,12 +526,6 @@ export default function ProductWorkspace() {
             </div>
           </div>
         }
-        panel={
-          <ProductPreviewPanel
-            product={selectedProduct}
-            onEdit={handleOpenEdit}
-          />
-        }
       />
 
       {/* Overlay de produto no mobile (substitui o painel lateral) */}
@@ -527,6 +569,42 @@ export default function ProductWorkspace() {
           categories={categories}
         />
       )}
+
+      {isDeleteConfirmOpen && selectedProduct ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(28,28,26,0.55)] px-6"
+          onClick={event => {
+            if (event.target === event.currentTarget) {
+              handleCloseDeleteConfirm();
+            }
+          }}>
+          <div className="w-full max-w-[420px] rounded-[10px] border border-[#E5DED4] bg-white p-6 shadow-[0_20px_60px_rgba(31,30,28,0.20)]">
+            <h3 className="text-[1.1rem] font-semibold text-[#1C1C1A]">
+              Tem certeza que deseja excluir este produto?
+            </h3>
+            <p className="mt-2 text-[13px] text-[#5F5751] leading-relaxed">
+              Esta ação não poderá ser desfeita.
+            </p>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleCloseDeleteConfirm}
+                disabled={isSubmitting}
+                className="h-10 px-4 border border-[#D5CFC8] text-[12px] text-[#5F5751] hover:text-[#1C1C1A] hover:border-[#9A9189] disabled:opacity-50 transition-colors rounded-[5px]">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleConfirmDeleteFromList()}
+                disabled={isSubmitting}
+                className="h-10 px-4 border border-[#C98B8B] bg-[#FBF2F2] text-[12px] font-medium text-[#8A3A3A] hover:bg-[#F8E7E7] disabled:opacity-50 transition-colors rounded-[5px]">
+                Confirmar exclusão
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

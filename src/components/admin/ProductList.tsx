@@ -8,6 +8,8 @@ interface ProductListProps {
   isLoading: boolean;
   error: string | null;
   onSelectProduct: (id: string) => void;
+  onEditProduct: (id: string) => void;
+  onDeleteProduct: (id: string) => void;
 }
 
 export default function ProductList({
@@ -17,6 +19,8 @@ export default function ProductList({
   isLoading,
   error,
   onSelectProduct,
+  onEditProduct,
+  onDeleteProduct
 }: ProductListProps) {
   if (isLoading) {
     return (
@@ -46,19 +50,22 @@ export default function ProductList({
 
   return (
     <div className="bg-white">
-      <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr] gap-0 px-6 py-3.5 border-b border-[#E5E0D8] text-[10.5px] tracking-[0.12em] uppercase text-[#B0A9A0] font-semibold">
+      <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_96px] gap-0 px-6 py-3.5 border-b border-[#E5E0D8] text-[10.5px] tracking-[0.12em] uppercase text-[#B0A9A0] font-semibold">
         <span>Produto</span>
         <span>Categoria</span>
         <span>Preço</span>
         <span>Status</span>
+        <span className="text-right">Ações</span>
       </div>
-      {products.map((product) => (
+      {products.map(product => (
         <ProductListItem
           key={product.id}
           product={product}
           categories={categories}
           isSelected={selectedProductId === product.id}
           onSelect={() => onSelectProduct(product.id)}
+          onEdit={() => onEditProduct(product.id)}
+          onDelete={() => onDeleteProduct(product.id)}
         />
       ))}
     </div>
