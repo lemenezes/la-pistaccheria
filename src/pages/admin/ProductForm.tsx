@@ -516,9 +516,7 @@ export default function ProductForm({
           ? ""
           : "Selecione uma categoria.",
       price:
-        normalizedPrice.length > 0 &&
-        parsedPrice != null &&
-        parsedPrice > 0
+        normalizedPrice.length > 0 && parsedPrice != null && parsedPrice > 0
           ? ""
           : "Informe um preço maior que zero.",
       short_description:
