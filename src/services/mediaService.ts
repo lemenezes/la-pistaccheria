@@ -49,17 +49,6 @@ export const isDeleteUploadedMediaAssetSuccessful = (
   return false;
 };
 
-export const getMediaAssets = async () => {
-  return supabase
-    .from("media_assets")
-    .select("*")
-    .order("created_at", { ascending: false });
-};
-
-export const deleteMediaAsset = async (id: string) => {
-  return supabase.from("media_assets").delete().eq("id", id);
-};
-
 export const uploadMediaAsset = async (file: File, bucketArea = "products") => {
   if (!mediaUploadWorkerUrl) {
     throw new Error(

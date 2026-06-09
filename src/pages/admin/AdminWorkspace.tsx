@@ -66,7 +66,7 @@ function matchesCategory(product: DatabaseProduct, category: DatabaseCategory) {
   return product.category.trim().toLowerCase() === category.name.trim().toLowerCase();
 }
 
-function DashboardIcon({ type }: { type: "products" | "active" | "categories" | "orders" | "arrow" | "plus" | "media" }) {
+function DashboardIcon({ type }: { type: "products" | "active" | "categories" | "orders" | "arrow" | "plus" }) {
   const commonClassName = "w-5 h-5";
 
   switch (type) {
@@ -113,14 +113,6 @@ function DashboardIcon({ type }: { type: "products" | "active" | "categories" | 
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" className={commonClassName}>
           <circle cx="12" cy="12" r="9" />
           <path d="M12 8v8M8 12h8" />
-        </svg>
-      );
-    case "media":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" className={commonClassName}>
-          <rect x="3" y="4" width="18" height="16" rx="2" />
-          <circle cx="8.5" cy="9" r="1.25" />
-          <path d="M21 15l-4.5-4.5L7 20" />
         </svg>
       );
     default:
@@ -622,21 +614,14 @@ export default function AdminWorkspace() {
                       icon: "categories" as const,
                       onClick: () => navigate("/admin/categorias"),
                     },
-                    {
-                      label: "Midia",
-                      description: "Modulo ainda indisponivel",
-                      icon: "media" as const,
-                      disabled: true,
-                    },
                   ].map((action) => (
                     <button
                       key={action.label}
                       type="button"
                       onClick={action.onClick}
-                      disabled={action.disabled}
-                      className={`group flex items-start gap-3 rounded-[18px] border px-4 py-4 text-left transition-all ${action.disabled ? "cursor-not-allowed border-[#E9E2D9] bg-[#FAF7F2] text-[#A59A8E]" : "border-[#E6DDD1] bg-[#FCFAF7] text-[#26231F] hover:-translate-y-0.5 hover:border-[#D2C7B8] hover:bg-white"}`}
+                      className="group flex items-start gap-3 rounded-[18px] border border-[#E6DDD1] bg-[#FCFAF7] px-4 py-4 text-left text-[#26231F] transition-all hover:-translate-y-0.5 hover:border-[#D2C7B8] hover:bg-white"
                     >
-                      <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${action.disabled ? "border-[#E2D8CB] bg-[#F3EEE7] text-[#B4AA9F]" : "border-[#E6DDD1] bg-[#F6F0E6] text-[#2A3D20]"}`}>
+                      <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E6DDD1] bg-[#F6F0E6] text-[#2A3D20]">
                         <DashboardIcon type={action.icon} />
                       </div>
                       <div className="min-w-0">
