@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 import {
@@ -42,6 +42,7 @@ interface ProductFormProps {
   error?: string | null;
   hideActions?: boolean;
   categories: DatabaseCategory[];
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 const inputClass =
@@ -93,6 +94,46 @@ function parseProductImages(imageUrl: string, galleryUrls: string) {
   return Array.from(new Set(images));
 }
 
+function normalizePriceInput(rawValue: string) {
+  const trimmedValue = rawValue.trim();
+
+  if (!trimmedValue) {
+    return "";
+  }
+
+  if (trimmedValue.includes(",")) {
+    return trimmedValue.replace(/\./g, "").replace(",", ".");
+  }
+
+  return trimmedValue;
+}
+
+function parseNormalizedPrice(rawValue: string) {
+  const normalizedValue = normalizePriceInput(rawValue);
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const parsedValue = Number(normalizedValue);
+
+  if (!Number.isFinite(parsedValue)) {
+    return null;
+  }
+
+  return parsedValue;
+}
+
+function formatPriceForPtBrInput(rawValue: string) {
+  const parsedValue = parseNormalizedPrice(rawValue);
+
+  if (parsedValue == null || parsedValue <= 0) {
+    return rawValue.trim();
+  }
+
+  return parsedValue.toFixed(2).replace(".", ",");
+}
+
 export default function ProductForm({
   id,
   initialData,
@@ -102,7 +143,8 @@ export default function ProductForm({
   onCancel,
   error,
   hideActions,
-  categories
+  categories,
+  onDirtyChange
 }: ProductFormProps) {
   const initialCategory = initialData?.category ?? "";
   const resolvedCategoryByName = categories.find(
@@ -155,6 +197,8 @@ export default function ProductForm({
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [productImages, setProductImages] =
     useState<string[]>(initialProductImages);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState<string>(() => {
     const initialImages = initialProductImages;
 
@@ -168,6 +212,8 @@ export default function ProductForm({
     return initialImages[0] ?? "";
   });
   const originalProductImagesRef = useRef<string[]>(initialProductImages);
+  const initialFormSnapshotRef = useRef<string>("");
+  const lastDirtyStateRef = useRef<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const nameFieldRef = useRef<HTMLInputElement | null>(null);
   const categoryFieldRef = useRef<HTMLSelectElement | null>(null);
@@ -183,6 +229,139 @@ export default function ProductForm({
     coverImageUrl && productImages.includes(coverImageUrl)
       ? coverImageUrl
       : (productImages[0] ?? "");
+  const hasMultipleImages = productImages.length > 1;
+  const effectiveLightboxIndex = lightboxIndex ?? 0;
+  const clampedLightboxIndex = Math.min(
+    Math.max(effectiveLightboxIndex, 0),
+    Math.max(productImages.length - 1, 0)
+  );
+  const currentLightboxImage = productImages[clampedLightboxIndex] ?? "";
+
+  const buildFormSnapshot = useCallback(
+    (values: ProductFormValues, images: string[], currentCover: string) => {
+      const safeCurrentCover =
+        currentCover && images.includes(currentCover)
+          ? currentCover
+          : (images[0] ?? "");
+
+      return JSON.stringify({
+        name: values.name,
+        slug: values.slug,
+        category_id: values.category_id,
+        category: values.category,
+        short_description: values.short_description,
+        description: values.description,
+        price: values.price,
+        image_url: safeCurrentCover,
+        active: values.active,
+        featured: values.featured,
+        display_order: values.display_order,
+        meta_title: values.meta_title,
+        meta_description: values.meta_description,
+        gallery_urls: images.filter(url => url !== safeCurrentCover)
+      });
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (initialFormSnapshotRef.current) {
+      return;
+    }
+
+    initialFormSnapshotRef.current = buildFormSnapshot(
+      form,
+      initialProductImages,
+      coverImageUrl
+    );
+  }, [buildFormSnapshot, coverImageUrl, form, initialProductImages]);
+
+  useEffect(() => {
+    if (!onDirtyChange || !initialFormSnapshotRef.current) {
+      return;
+    }
+
+    const currentSnapshot = buildFormSnapshot(
+      form,
+      productImages,
+      coverImageUrl
+    );
+    const isDirty = currentSnapshot !== initialFormSnapshotRef.current;
+
+    if (lastDirtyStateRef.current === isDirty) {
+      return;
+    }
+
+    lastDirtyStateRef.current = isDirty;
+    onDirtyChange(isDirty);
+  }, [buildFormSnapshot, coverImageUrl, form, onDirtyChange, productImages]);
+
+  useEffect(() => {
+    if (!isLightboxOpen) {
+      return;
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        setLightboxIndex(null);
+        setIsLightboxOpen(false);
+        return;
+      }
+
+      if (!hasMultipleImages) {
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        setLightboxIndex(current =>
+          (current ?? 0) <= 0 ? productImages.length - 1 : (current ?? 0) - 1
+        );
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        setLightboxIndex(current =>
+          (current ?? 0) >= productImages.length - 1 ? 0 : (current ?? 0) + 1
+        );
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown, true);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown, true);
+    };
+  }, [hasMultipleImages, isLightboxOpen, productImages.length]);
+
+  useEffect(() => {
+    if (!isLightboxOpen) {
+      return;
+    }
+
+    if (productImages.length === 0) {
+      setLightboxIndex(null);
+      setIsLightboxOpen(false);
+      return;
+    }
+
+    if (lightboxIndex == null) {
+      setLightboxIndex(0);
+      return;
+    }
+
+    if (lightboxIndex > productImages.length - 1) {
+      setLightboxIndex(productImages.length - 1);
+    }
+  }, [isLightboxOpen, lightboxIndex, productImages]);
 
   const cleanupRemovedImages = useCallback(
     async (removedImageUrls: string[], excludeProductId?: string) => {
@@ -302,12 +481,20 @@ export default function ProductForm({
 
   function handlePriceChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
+    const parsedValue = parseNormalizedPrice(value);
 
-    if (value.trim().length > 0 && Number(value) > 0) {
+    if (parsedValue != null && parsedValue > 0) {
       setFormErrors(prev => ({ ...prev, price: "" }));
     }
 
     setForm(prev => ({ ...prev, price: value }));
+  }
+
+  function handlePriceBlur() {
+    setForm(prev => ({
+      ...prev,
+      price: formatPriceForPtBrInput(prev.price)
+    }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -317,9 +504,10 @@ export default function ProductForm({
     const trimmedCategoryId = form.category_id.trim();
     const trimmedCategory = form.category.trim();
     const trimmedPrice = form.price.trim();
+    const normalizedPrice = normalizePriceInput(trimmedPrice);
     const trimmedShortDescription = form.short_description.trim();
     const trimmedDescription = form.description.trim();
-    const parsedPrice = Number(trimmedPrice);
+    const parsedPrice = parseNormalizedPrice(normalizedPrice);
 
     const nextErrors: ProductFormErrors = {
       name: trimmedName.length > 0 ? "" : "Informe o nome do produto.",
@@ -328,8 +516,8 @@ export default function ProductForm({
           ? ""
           : "Selecione uma categoria.",
       price:
-        trimmedPrice.length > 0 &&
-        Number.isFinite(parsedPrice) &&
+        normalizedPrice.length > 0 &&
+        parsedPrice != null &&
         parsedPrice > 0
           ? ""
           : "Informe um preço maior que zero.",
@@ -389,7 +577,7 @@ export default function ProductForm({
       ...form,
       name: trimmedName,
       slug: nextSlug,
-      price: trimmedPrice,
+      price: (parsedPrice ?? 0).toFixed(2),
       image_url: safeCoverImageUrl,
       gallery_urls: finalProductImages.slice(1).join("\n"),
       meta_title: nextMetaTitle,
@@ -450,6 +638,38 @@ export default function ProductForm({
   const handleUploadImageClick = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
+
+  const handleOpenImageLightbox = useCallback((index: number) => {
+    setLightboxIndex(index);
+    setIsLightboxOpen(true);
+  }, []);
+
+  const handleCloseImageLightbox = useCallback(() => {
+    setLightboxIndex(null);
+    setIsLightboxOpen(false);
+  }, []);
+
+  const handleShowPreviousImage = useCallback(() => {
+    if (productImages.length === 0) {
+      return;
+    }
+
+    setLightboxIndex(current => {
+      const safeCurrent = current ?? 0;
+      return safeCurrent <= 0 ? productImages.length - 1 : safeCurrent - 1;
+    });
+  }, [productImages.length]);
+
+  const handleShowNextImage = useCallback(() => {
+    if (productImages.length === 0) {
+      return;
+    }
+
+    setLightboxIndex(current => {
+      const safeCurrent = current ?? 0;
+      return safeCurrent >= productImages.length - 1 ? 0 : safeCurrent + 1;
+    });
+  }, [productImages.length]);
 
   const handleUploadImagesChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -627,11 +847,11 @@ export default function ProductForm({
             ref={priceFieldRef}
             id="pf-price"
             name="price"
-            type="number"
-            min="0"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={form.price}
             onChange={handlePriceChange}
+            onBlur={handlePriceBlur}
             required
             aria-invalid={!!formErrors.price}
             className={`${inputClass} ${formErrors.price ? "border-[#C98B8B] focus:border-[#A45858] focus:ring-[#A45858]/20" : ""}`}
@@ -681,7 +901,10 @@ export default function ProductForm({
                 <div
                   key={`${url}-${index}`}
                   className="flex min-h-[160px] flex-col overflow-hidden rounded-[8px] border border-[#E5E0D8] bg-[#F7F5F2] p-2">
-                  <div className="h-[120px] overflow-hidden rounded-[6px] bg-white sm:h-[130px]">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenImageLightbox(index)}
+                    className="h-[120px] overflow-hidden rounded-[6px] bg-white sm:h-[130px]">
                     <img
                       src={url}
                       alt={
@@ -690,7 +913,7 @@ export default function ProductForm({
                       className="h-full w-full object-cover"
                       loading="lazy"
                     />
-                  </div>
+                  </button>
                   <p className="mt-2 whitespace-nowrap text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-[#5F5751]">
                     {url === safeCoverImageUrl
                       ? "Capa do produto"
@@ -836,6 +1059,64 @@ export default function ProductForm({
           </button>
         </div>
       )}
+
+      {isLightboxOpen && currentLightboxImage ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(20,20,19,0.75)] p-4"
+          onClick={handleCloseImageLightbox}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Visualização de imagem do produto">
+          <div
+            className="relative w-full max-w-[980px]"
+            onClick={event => event.stopPropagation()}>
+            <button
+              type="button"
+              onClick={handleCloseImageLightbox}
+              className="absolute right-2 top-2 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-black/35 text-xl text-white transition-colors hover:bg-black/50"
+              aria-label="Fechar visualização">
+              ×
+            </button>
+
+            <div className="overflow-hidden rounded-[10px] border border-white/20 bg-[#121211]">
+              <img
+                src={currentLightboxImage}
+                alt="Imagem ampliada do produto"
+                className="max-h-[78vh] w-full object-contain"
+              />
+            </div>
+
+            <div className="mt-3 flex items-center justify-between">
+              <span className="rounded-[5px] bg-black/45 px-3 py-1 text-[12px] font-medium text-white">
+                {clampedLightboxIndex + 1}/{productImages.length}
+              </span>
+
+              {hasMultipleImages ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={event => {
+                      event.stopPropagation();
+                      handleShowPreviousImage();
+                    }}
+                    className="rounded-[5px] border border-white/40 bg-black/35 px-3 py-1 text-[12px] font-medium text-white transition-colors hover:bg-black/50">
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    onClick={event => {
+                      event.stopPropagation();
+                      handleShowNextImage();
+                    }}
+                    className="rounded-[5px] border border-white/40 bg-black/35 px-3 py-1 text-[12px] font-medium text-white transition-colors hover:bg-black/50">
+                    Próxima
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }

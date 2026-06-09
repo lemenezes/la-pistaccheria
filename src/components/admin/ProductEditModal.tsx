@@ -28,14 +28,34 @@ export default function ProductEditModal({
   categories
 }: ProductEditModalProps) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
+  const [isFormDirty, setIsFormDirty] = useState(false);
 
-  // Fechar com Escape
+  useEffect(() => {
+    setIsFormDirty(false);
+    setIsDiscardConfirmOpen(false);
+  }, [mode, product?.id]);
+
+  // Escape fecha apenas a confirmação de exclusão, nunca o modal principal.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key !== "Escape" || isSubmitting) return;
 
+      e.preventDefault();
+      e.stopPropagation();
+
       if (isDeleteConfirmOpen) {
         setIsDeleteConfirmOpen(false);
+        return;
+      }
+
+      if (isDiscardConfirmOpen) {
+        setIsDiscardConfirmOpen(false);
+        return;
+      }
+
+      if (isFormDirty) {
+        setIsDiscardConfirmOpen(true);
         return;
       }
 
@@ -43,7 +63,13 @@ export default function ProductEditModal({
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isDeleteConfirmOpen, isSubmitting, onClose]);
+  }, [
+    isDeleteConfirmOpen,
+    isDiscardConfirmOpen,
+    isFormDirty,
+    isSubmitting,
+    onClose
+  ]);
 
   // Bloquear scroll do body enquanto modal está aberto
   useEffect(() => {
@@ -57,9 +83,9 @@ export default function ProductEditModal({
     /* Overlay */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
-      style={{ background: "rgba(28,28,26,0.55)", backdropFilter: "blur(2px)" }}
-      onClick={e => {
-        if (e.target === e.currentTarget && !isSubmitting) onClose();
+      style={{
+        background: "rgba(28,28,26,0.55)",
+        backdropFilter: "blur(2px)"
       }}>
       {/* Modal */}
       <div
@@ -110,6 +136,7 @@ export default function ProductEditModal({
             error={null}
             hideActions
             categories={categories}
+            onDirtyChange={setIsFormDirty}
           />
         </div>
 
@@ -169,6 +196,36 @@ export default function ProductEditModal({
                   disabled={isSubmitting}
                   className="h-10 px-4 border border-[#C98B8B] bg-[#FBF2F2] text-[12px] font-medium text-[#8A3A3A] hover:bg-[#F8E7E7] disabled:opacity-50 transition-colors rounded-[5px]">
                   Confirmar exclusão
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {isDiscardConfirmOpen ? (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-[rgba(28,28,26,0.55)] px-6">
+            <div className="w-full max-w-[420px] rounded-[10px] border border-[#E5DED4] bg-white p-6 shadow-[0_20px_60px_rgba(31,30,28,0.20)]">
+              <h3 className="text-[1.1rem] font-semibold text-[#1C1C1A]">
+                Descartar alterações?
+              </h3>
+              <p className="mt-2 text-[13px] text-[#5F5751] leading-relaxed">
+                Você possui alterações não salvas.
+              </p>
+
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsDiscardConfirmOpen(false)}
+                  disabled={isSubmitting}
+                  className="h-10 px-4 border border-[#D5CFC8] text-[12px] text-[#5F5751] hover:text-[#1C1C1A] hover:border-[#9A9189] disabled:opacity-50 transition-colors rounded-[5px]">
+                  Continuar editando
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                  className="h-10 px-4 border border-[#C98B8B] bg-[#FBF2F2] text-[12px] font-medium text-[#8A3A3A] hover:bg-[#F8E7E7] disabled:opacity-50 transition-colors rounded-[5px]">
+                  Descartar alterações
                 </button>
               </div>
             </div>

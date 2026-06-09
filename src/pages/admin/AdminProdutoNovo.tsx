@@ -5,6 +5,21 @@ import { createProduct, getCategories } from "../../lib/supabase";
 import ProductForm, { type ProductFormValues } from "./ProductForm";
 import type { DatabaseCategory } from "../../types/database";
 
+function parsePriceValue(rawValue: string) {
+  const trimmedValue = rawValue.trim();
+
+  if (!trimmedValue) {
+    return 0;
+  }
+
+  const normalizedValue = trimmedValue.includes(",")
+    ? trimmedValue.replace(/\./g, "").replace(",", ".")
+    : trimmedValue;
+  const parsedValue = Number.parseFloat(normalizedValue);
+
+  return Number.isFinite(parsedValue) ? parsedValue : 0;
+}
+
 export default function AdminProdutoNovo() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -17,7 +32,7 @@ export default function AdminProdutoNovo() {
 
     async function loadCategories() {
       const { data, error: queryError } = await getCategories({
-        activeOnly: true,
+        activeOnly: true
       });
 
       if (ignore) return;
@@ -44,8 +59,8 @@ export default function AdminProdutoNovo() {
     try {
       const galleryUrls = values.gallery_urls
         .split("\n")
-        .map((url) => url.trim())
-        .filter((url) => url.length > 0);
+        .map(url => url.trim())
+        .filter(url => url.length > 0);
 
       const { error: apiError } = await createProduct({
         name: values.name,
@@ -54,7 +69,7 @@ export default function AdminProdutoNovo() {
         category_id: values.category_id || null,
         short_description: values.short_description,
         description: values.description,
-        price: parseFloat(values.price) || 0,
+        price: parsePriceValue(values.price),
         image_url: values.image_url || null,
         active: values.active,
         featured: values.featured,
@@ -63,7 +78,7 @@ export default function AdminProdutoNovo() {
         display_order: parseInt(values.display_order) || 0,
         meta_title: values.meta_title || null,
         meta_description: values.meta_description || null,
-        gallery_urls: galleryUrls,
+        gallery_urls: galleryUrls
       });
 
       if (apiError) {
@@ -96,8 +111,7 @@ export default function AdminProdutoNovo() {
             </p>
             <h1
               className="text-[2.2rem] md:text-[2.8rem] font-light text-charcoal leading-[1.05]"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-            >
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
               Novo Produto
             </h1>
             <p className="text-[12px] font-light text-warm-gray mt-2">
@@ -108,8 +122,7 @@ export default function AdminProdutoNovo() {
           <button
             type="button"
             onClick={handleLogout}
-            className="self-start md:self-auto px-5 h-10 border border-cream-deep text-[10px] tracking-[0.16em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 transition-colors"
-          >
+            className="self-start md:self-auto px-5 h-10 border border-cream-deep text-[10px] tracking-[0.16em] uppercase text-warm-gray hover:text-charcoal hover:border-charcoal/35 transition-colors">
             Sair
           </button>
         </div>

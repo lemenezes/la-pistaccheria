@@ -9,6 +9,21 @@ import {
 import type { DatabaseCategory, DatabaseProduct } from "../../types/database";
 import ProductForm, { type ProductFormValues } from "./ProductForm";
 
+function parsePriceValue(rawValue: string) {
+  const trimmedValue = rawValue.trim();
+
+  if (!trimmedValue) {
+    return 0;
+  }
+
+  const normalizedValue = trimmedValue.includes(",")
+    ? trimmedValue.replace(/\./g, "").replace(",", ".")
+    : trimmedValue;
+  const parsedValue = Number.parseFloat(normalizedValue);
+
+  return Number.isFinite(parsedValue) ? parsedValue : 0;
+}
+
 export default function AdminProdutoEditar() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -94,7 +109,7 @@ export default function AdminProdutoEditar() {
         category_id: values.category_id || null,
         short_description: values.short_description,
         description: values.description,
-        price: parseFloat(values.price) || 0,
+        price: parsePriceValue(values.price),
         image_url: values.image_url || null,
         active: values.active,
         featured: values.featured,

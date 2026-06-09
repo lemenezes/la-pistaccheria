@@ -25,6 +25,21 @@ import ProductListToolbar, {
 import ProductPreviewPanel from "./ProductPreviewPanel";
 import ProductEditModal from "./ProductEditModal";
 
+function parsePriceValue(rawValue: string) {
+  const trimmedValue = rawValue.trim();
+
+  if (!trimmedValue) {
+    return 0;
+  }
+
+  const normalizedValue = trimmedValue.includes(",")
+    ? trimmedValue.replace(/\./g, "").replace(",", ".")
+    : trimmedValue;
+  const parsedValue = Number.parseFloat(normalizedValue);
+
+  return Number.isFinite(parsedValue) ? parsedValue : 0;
+}
+
 function getProductImageUrls(product: DatabaseProduct) {
   const galleryUrls = Array.isArray(product.gallery_urls)
     ? product.gallery_urls
@@ -202,7 +217,7 @@ export default function ProductWorkspace() {
       category_id: values.category_id || null,
       short_description: values.short_description,
       description: values.description,
-      price: parseFloat(values.price) || 0,
+      price: parsePriceValue(values.price),
       image_url: values.image_url || null,
       active: values.active,
       featured: values.featured,
